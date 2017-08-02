@@ -71,6 +71,14 @@
             $("#hiddenValue").val(myIndex);
         });
 
+
+        $('#myDT tbody').on('click', '.glyphicon-eye-open', function () {
+            var tr = $(this).parents('tr');
+            var index = $Table.row(tr).index();
+            var rowData = $Table.row(index).data();
+            window.location.replace("http://localhost:56892/Parcel?farmId=" + rowData.Id);
+        });
+
     }); // End Ready
     function setDTWithData(getData) {
         $Table = $('#myDT').DataTable({
@@ -81,7 +89,7 @@
                 { "data": "Id" },
                 { "data": "Name" },
                 { "data": "Description" },
-                { "defaultContent": "<span class='glyphicon glyphicon-remove-sign'></span> <span> | </span> <span class='glyphicon glyphicon-ok-sign''></span>" }
+                { "defaultContent": "<span class='glyphicon glyphicon-remove-sign'></span> <span> | </span> <span class='glyphicon glyphicon-ok-sign''></span> | </span> <span class='glyphicon glyphicon-eye-open''></span>" }
             ],
             responsive: true,
             "columnDefs": [
