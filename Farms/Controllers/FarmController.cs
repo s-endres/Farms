@@ -75,6 +75,12 @@ namespace Farms.Controllers
             return Json(FarmData.FarmList, JsonRequestBehavior.AllowGet);
         }
 
+        [HttpGet]
+        public JsonResult GetFarmsById(int farmId)
+        {
+            return Json(FarmData.FarmList.Where(f => f.Id == farmId).FirstOrDefault(), JsonRequestBehavior.AllowGet);
+        }
+
 
     }
 }

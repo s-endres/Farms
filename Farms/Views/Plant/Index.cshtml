@@ -28,9 +28,19 @@
             return results[1] || 0;
         }
 
+        $.get('http://localhost:56892/Parcel/GetParcel?parcelId=' + $.urlParam('parcelId'), function (data) {
+            $("#title").text($("#title").text() + " - " + data.Description);
+        });
+
         $.get('http://localhost:56892/Plant/GetAllPlantsByParcelId?parcelId=' + $.urlParam('parcelId'), function (data) {
+            $.each(data, function () {
+                var currentPlant = this;
+                $.ajaxSetup({ async: false });
+                $.get('http://localhost:56892/Plant/GetTypePlantById?plantTypeId=' + currentPlant.PlantType, function (dataType) {
+                    currentPlant.PlantType = dataType.Name;
+                });
+            });
             setDTWithData(data);
-            console.log(data);
         });
 
         $.ajax({
@@ -124,7 +134,6 @@
                 { "data": "Name" },
                 { "data": "Description" },
                 { "data": "PlantedDate" },
-                { "data": "IdParcel" },
                 { "data": "PlantType" },
                 { "defaultContent": "<span class='glyphicon glyphicon-remove-sign'></span> <span> | </span> <span class='glyphicon glyphicon-ok-sign''></span>" }
             ],
@@ -210,7 +219,7 @@
     }
 
 </script>
-<h2>Plants</h2>
+<h2 id="title">Plants</h2>
 
 
 <div class="row" style="padding:15px">
@@ -238,9 +247,6 @@
                                 </th>
                                 <th>
                                     <label>Planted Date</label>
-                                </th>
-                                <th>
-                                    <label>Parcel</label>
                                 </th>
                                 <th>
                                     <label>Plant Type</label>

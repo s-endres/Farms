@@ -82,9 +82,9 @@ namespace Farms.Controllers
             return Json(PlantData.PlantTypeList, JsonRequestBehavior.AllowGet);
         }
         [HttpGet]
-        public JsonResult GetTypePlantById(int plantId)
+        public JsonResult GetTypePlantById(int plantTypeId)
         {
-            return Json(PlantData.PlantTypeList.Where(p=>p.Id == plantId).FirstOrDefault(), JsonRequestBehavior.AllowGet);
+            return Json(PlantData.PlantTypeList.Where(p=>p.Id == plantTypeId).FirstOrDefault(), JsonRequestBehavior.AllowGet);
         }
 
         [HttpGet]
