@@ -22,6 +22,15 @@ namespace Farms.Data
             new Plant()
             {
                 Id = 2,
+                Name = "Boom",
+                Description = "Ut wisi enim ad minim veniam, quis nostrud exerci tation u",
+                PlantedDate = "2017-04-10",
+                IdParcel = 1,
+                PlantType = 1,
+            },
+            new Plant()
+            {
+                Id = 2,
                 Name = "Bella",
                 Description = "Ut wisi enim ad minim veniam, quis nostrud exerci tation u",
                 PlantedDate = "2017-04-10",

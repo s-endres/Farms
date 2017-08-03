@@ -31,6 +31,32 @@
             window.location.replace("http://localhost:56892/Parcel/Create?farmId=" + $.urlParam('farmId'));
         });
 
+        $('#myDT tbody').on('click', '.glyphicon-minus-sign', function () {
+            var tr = $(this).parents('tr');
+            var row = $Table.row(tr)
+            var rowData = $Table.row(row.index()).data();
+
+            if (row.child.isShown()) {
+                // This row is already open - close it
+                row.child.hide();
+                tr.removeClass('shown');
+            }
+            else {
+                $.ajaxSetup({ async: false });
+                var rows = "";
+                $.get('http://localhost:56892/Plant/GetParcelByTypeAndCount?parcelId=' + rowData.Id, function (data) {
+                    $.each(data,function() {
+                        rows += '<tr>' +
+                            '<td>' + this.type+ '</td>' +
+                            '<td>' + this.count + '</td>' +
+                            '</tr>';
+                    });
+                });
+                row.child(format(rows)).show();
+                tr.addClass('shown');
+            }
+        });
+
         $('#myDT tbody').on('click', '.glyphicon-remove-sign', function () {
             var myRow = $(this).parents('tr');
             var myIndex = $Table.row(myRow).index();
@@ -65,15 +91,27 @@
             var d = $Table
                 .row(myIndex)
                 .data();
-            console.log(d);
             window.location.replace("http://localhost:56892/Parcel/Edit?parcelId=" + d.Id);
         });
 
         $.get('http://localhost:56892/Parcel/GetAllParcelByFarmId?farmId=' + $.urlParam('farmId'), function (data) {
-            console.log(data);
             setDTWithData(data);
         });
     });
+
+    function format(data) {
+        if (data == "") { return "No Plants on Parcel" }
+        // `d` is the original data object for the row
+        var tableHtml = '<table class="table-striped">' +
+            '<tr>' +
+            '<th>Type:</th>' +
+            '<th>Count:</th>' +
+            '</tr>';
+        tableHtml += data;
+
+        return tableHtml + '</table>';
+    }
+
     function setDTWithData(getData) {
         $Table = $('#myDT').DataTable({
             "processing": true,

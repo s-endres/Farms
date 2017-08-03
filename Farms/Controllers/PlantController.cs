@@ -81,5 +81,35 @@ namespace Farms.Controllers
         {
             return Json(PlantData.PlantTypeList, JsonRequestBehavior.AllowGet);
         }
+        [HttpGet]
+        public JsonResult GetTypePlantById(int plantId)
+        {
+            return Json(PlantData.PlantTypeList.Where(p=>p.Id == plantId).FirstOrDefault(), JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpGet]
+        public JsonResult GetParcelByTypeAndCount(int parcelId)
+        {
+            var a = from p in PlantData.PlantList
+                where p.IdParcel == parcelId
+                group p by p.PlantType
+                into g
+                select g.ToList();
+            List<Object> result = new List<object>();
+            foreach(var b in a)
+            {
+                result.Add(new
+                {
+                    count = b.Count,
+                    type = GetTypeName(b.FirstOrDefault().PlantType)
+                });
+            }
+
+            return Json(result, JsonRequestBehavior.AllowGet);
+        }
+        private string GetTypeName(int plantId)
+        {
+            return PlantData.PlantTypeList.Where(p => p.Id == plantId).FirstOrDefault().Name;
+        }
     }
 }
