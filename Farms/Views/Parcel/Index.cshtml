@@ -2,4 +2,98 @@
 @{
     ViewBag.Title = "Parcel";
 }
-<h2>Parcel</h2>
+
+<!-- MetisMenu CSS -->
+<link href="/bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
+<!-- DataTables CSS -->
+<link href="/bower_components/datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.css" rel="stylesheet">
+<!-- DataTables Responsive CSS -->
+<link href="/bower_components/datatables-responsive/css/dataTables.responsive.css" rel="stylesheet">
+<!-- Custom Fonts -->
+<link href="/bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+<!-- DataTables JavaScript -->
+<script src="/bower_components/datatables/media/js/jquery.dataTables.min.js"></script>
+<script src="/bower_components/datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.min.js"></script>
+<!-- Summernote -->
+<link href="/bower_components/summernote/css/summernote.css" rel="stylesheet" type="text/css">
+<script src="/bower_components/summernote/js/summernote.min.js"></script>
+
+<script>
+
+    $(document).ready(function () {
+
+        //<!--DataTables  Initialization -- >
+        $table = $('#myDT').DataTable({
+            responsive: true,
+            "order": [[1, "asc"]],
+            "columnDefs": [{ "targets": [0, 4], "orderable": false }]
+        });
+
+        $.urlParam = function (name) {
+            var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+            return results[1] || 0;
+        }
+
+        $.ajax({
+            type: "GET",
+            url: "http://localhost:56892/Farm/GetFarmsById",
+            data: { farmId: $.urlParam("farmId")},
+            dataType: "json",
+            contentType: 'application/json; charset=utf-8',
+            success: function (data) {
+                console.log(data.Name);
+                $("#h2Title").text("Parcel - " + data.Name);
+                //$.each(data, function () {
+
+                //    var array = [
+                //        "<td> <button type=\"button\" class=\"glyphicon glyphicon-plus\" onclick = \"ShowChild(this)\"></button> </td>",
+                //        this.Id,
+                //        this.Name,
+                //        this.Description,
+                //        "<button type=\"button\" data-toggle='modal' data-target='#DeleteModal' class=\"glyphicon glyphicon-trash\" onclick = \"removeRow(this)\"></button>" +
+                //        "<button type=\"button\" data-toggle='modal' data-target='#myModal' onclick =\"editRow(this)\" class = \"glyphicon glyphicon-pencil\"></button>" +
+                //        "<button type=\"button\" onclick =\"windowParcel(this)\" class = \"glyphicon glyphicon-eye-open\"> </button>"
+                //    ];
+                //    $table.row.add(array).draw();
+                //});
+
+            },
+
+        error: function () {
+            // ValidateMyAlert("Class='alert alert-danger'", 'error', 'Danger', "#alertContainer");
+            console.log("error");
+        }
+
+        });
+        
+    });
+</script>
+
+<h2 id="h2Title">Parcel</h2>
+
+<div class="panel-heading">
+    DataTable Advanced Table |
+    <button type="button" class="glyphicon glyphicon-plus" data-toggle="modal" data-target="#myModal"></button>
+</div>
+<table id="myDT" class="table">
+    <thead>
+        <tr>
+            <th>
+                <label>Show</label>
+            </th>
+            <th>
+                <label>Id</label>
+            </th>
+            <th>
+                <label>Size</label>
+            </th>
+            <th>
+                <label>Description</label>
+            </th>
+            <th>
+                <label>Buttons</label>
+            </th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
