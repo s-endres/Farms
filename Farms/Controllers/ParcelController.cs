@@ -18,6 +18,10 @@ namespace Farms.Controllers
         public ActionResult Create()
         {
             return View();
+        }// GET: Parcel
+        public ActionResult Edit()
+        {
+            return View();
         }
 
         [HttpGet]
@@ -45,6 +49,47 @@ namespace Farms.Controllers
                 return Json(parcel, JsonRequestBehavior.AllowGet);
             }
             return Json(false, JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpGet]
+        public JsonResult GetParcel(int? parcelId)
+        {
+            if (parcelId != null)
+            {
+                var parcel = ParcelData.ParcelList.Where(s => s.Id == parcelId).FirstOrDefault();
+                return Json(parcel, JsonRequestBehavior.AllowGet);
+            }
+            return Json(false, JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpPut]
+        public JsonResult UpdateParcel([Bind(Include = "Id,Size,Description,IdFarm,Observations,ConditionIds")] Parcel parcel)
+        {
+            if (!string.IsNullOrEmpty(parcel.Size.ToString()) && !string.IsNullOrEmpty(parcel.Description) && parcel.Observations.Count > 0)
+            {
+                var foundParcel = ParcelData.ParcelList.Where(s => s.Id == parcel.Id).FirstOrDefault();
+                foundParcel.Size = parcel.Size;
+                foundParcel.Description = parcel.Description;
+                foundParcel.Observations = parcel.Observations;
+                foundParcel.ConditionIds = parcel.ConditionIds;
+                return Json(foundParcel, JsonRequestBehavior.AllowGet);
+            }
+            return Json(false, JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpDelete]
+        public JsonResult RemoveParcel(int parcelId)
+        {
+            try
+            {
+                var parcel = ParcelData.ParcelList.Where(f => f.Id == parcelId).FirstOrDefault();
+                ParcelData.ParcelList.Remove(parcel);
+                return Json(true, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception e)
+            {
+                return Json(false, JsonRequestBehavior.AllowGet);
+            }
         }
 
     }

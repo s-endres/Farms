@@ -1017,6 +1017,7 @@
     <Content Include="Views\Farm\Index.cshtml" />
     <Content Include="Views\Parcel\Index.cshtml" />
     <Content Include="Views\Parcel\Create.cshtml" />
+    <Content Include="Views\Parcel\Edit.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

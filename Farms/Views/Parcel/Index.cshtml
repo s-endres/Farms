@@ -24,6 +24,44 @@
             window.location.replace("http://localhost:56892/Parcel/Create?farmId=" + $.urlParam('farmId'));
         });
 
+        $('#myDT tbody').on('click', '.glyphicon-remove-sign', function () {
+            var myRow = $(this).parents('tr');
+            var myIndex = $Table.row(myRow).index();
+            var dtData = $Table
+                .row(myIndex)
+                .data();
+
+            $.ajax({
+                type: "DELETE",
+                url: "http://localhost:56892/Parcel/RemoveParcel",
+                data: JSON.stringify({
+                    parcelId: dtData.Id
+                }),
+                dataType: "json",
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    if (data) {
+                        $Table.row(myRow).remove().draw();
+                    } else {
+                        alert('Wops ERROR O.O" ');
+                    }
+                },
+                error: function () {
+                    alert('Wops ERROR O.O2" ');
+                }
+            });
+        });
+
+        $('#myDT tbody').on('click', ".glyphicon-ok-sign", function () {
+            var myRow = $(this).parents('tr');
+            var myIndex = $Table.row(myRow).index();
+            var d = $Table
+                .row(myIndex)
+                .data();
+            console.log(d);
+            window.location.replace("http://localhost:56892/Parcel/Edit?parcelId=" + d.Id);
+        });
+
         $.get('http://localhost:56892/Parcel/GetAllParcelByFarmId?farmId=' + $.urlParam('farmId'), function (data) {
             console.log(data);
             setDTWithData(data);

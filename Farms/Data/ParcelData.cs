@@ -17,7 +17,20 @@ namespace Farms.Data
                 Description = "asdasdasdasdasdasdasd",
                 IdFarm = 1,
                 PlantIds = new List<int>(){1,2},
-                ConditionIds = new List<int>(){3,4}
+                ConditionIds = new List<int>(){3,4},
+                Observations = new List<Observation>()
+                {
+                    new Observation()
+                    {
+                        Id=1,
+                        Description = "Ut wisi enim ad minim veniam, quis nostrud exerci tation u"
+                    },
+                    new Observation()
+                    {
+                        Id=2,
+                        Description = "Ut wisi enim ad minim veniam, quis nostrud exerci tation u"
+                    }
+                }
             },
             new Parcel()
             {
