@@ -16,7 +16,6 @@
 <script>
     $(document).ready(function () {
         $.get('http://localhost:56892/Farm/GetAllFarms', function (data) {
-            console.log(data);
             setDTWithData(data);
         });
 
@@ -24,6 +23,36 @@
             function() {
                 cleanModalForm();
             });
+
+        $('#myDT tbody').on('click', '.glyphicon-minus-sign', function () {
+            var tr = $(this).parents('tr');
+            var row = $Table.row(tr)
+            var rowData = $Table.row(row.index()).data();
+
+            if (row.child.isShown()) {
+                // This row is already open - close it
+                row.child.hide();
+                tr.removeClass('shown');
+            }
+            else {
+                $.ajaxSetup({ async: false });
+                var rows = "";
+                $.get('http://localhost:56892/Parcel/GetAllParcelByFarmId?farmId=' + rowData.Id, function (data) {
+                    $.each(data, function () {
+                        var des = this.Description;
+                        $.get('http://localhost:56892/Plant/GetAllPlantsByParcelId?parcelId=' + this.Id, function (dataPlant) {
+                            
+                            rows += '<tr>' +
+                                '<td>' + des+ '</td>' +
+                                '<td>' + dataPlant.length + '</td>' +
+                                '</tr>';
+                        });
+                    });
+                });
+                row.child(format(rows)).show();
+                tr.addClass('shown');
+            }
+        });
 
         $('#myDT tbody').on('click', '.glyphicon-remove-sign', function () {
             var myRow = $(this).parents('tr');
@@ -80,6 +109,20 @@
         });
 
     }); // End Ready
+    
+    function format(data) {
+        if (data == ""){return "No Parcels on Farm"}
+        // `d` is the original data object for the row
+        var tableHtml = '<table class="table-striped">' +
+            '<tr>' +
+            '<th>Parcel:</th>' +
+            '<th>Plant count:</th>'+
+            '</tr>';
+        tableHtml += data;
+
+        return tableHtml + '</table>';
+    }
+
     function setDTWithData(getData) {
         $Table = $('#myDT').DataTable({
             "processing": true,
