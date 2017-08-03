@@ -3,4 +3,299 @@
     ViewBag.Title = "Farms";
 }
 
+<!-- DataTables JavaScript -->
+<script src="/bower_components/datatables/media/js/jquery.dataTables.min.js"></script>
+<script src="/bower_components/datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.min.js"></script>
+<link href="/bower_components/select2/css/select2.min.css" rel="stylesheet" type="text/css">
+<script src="/bower_components/select2/js/select2.min.js"></script>
+<!-- Summernote -->
+<link href="/bower_components/summernote/css/summernote.css" rel="stylesheet" type="text/css">
+<script src="/bower_components/summernote/js/summernote.min.js"></script>
+<!-- Custom Fonts -->
+<link href="/bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
 <h2>Farms</h2>
+
+<script>
+    $(document).ready(function () {
+
+        //$DTable = $('#myDT').DataTable({
+
+        //    responsive: true,
+        //    "columnDefs": [
+        //        {
+        //            "targets": [4],
+        //            "sortable": false
+        //        }
+        //    ]
+
+        //});
+
+        $summernote = $(".summernote").summernote({
+            height: 100
+        });
+
+        $.get('http://localhost:56892/Farm/GetAllFarms', function (data) {
+            setDataTable(data);
+        });
+
+        $('#myDT tbody').on('click', '.glyphicon-trash', function () {
+            $("#myDeleteModal").modal();
+            var RowHTML = $(this).parents('tr');
+            $("#hiddenModalInput").val($DTable.row(RowHTML).index());
+        });
+
+        $('#deleteBtn').on('click', function () {
+            var RowHTML = $("#hiddenModalInput").val();
+
+            $.ajax({
+                type: "DELETE",
+                url: "http://localhost:56892/Farm/RemoveFarm",
+                data: JSON.stringify({
+                    farmId: $DTable.row(RowHTML).data().Id
+                }),
+                dataType: "json",
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    if (data) {
+                        $DTable.row(RowHTML).remove().draw();
+                    } else {
+                        alert();
+                    }
+                },
+                error: function () {
+                    alert();
+                }
+            });
+        });
+
+        $(document).on('click', '.glyphicon-folder-open', function () {
+            $("#myModal").modal();
+        });
+
+        $('#myDT tbody').on('click', '.glyphicon-edit', function () {
+            $("#myModal").modal();
+            $("#Id").parent().show();
+            $('#btnEdit').css('display', 'inline');
+            $('#btnAdd').css('display', 'none');
+            var RowHTML = $(this).parents('tr');
+            $("#hiddenModalInput").val($DTable.row(RowHTML).index());
+            var Data = $DTable.row(RowHTML).data();
+            $("#Id").text(Data.Id);
+            $("#NameInput").val(Data.Name);
+            $("#DescriptionInput").val(Data.Description);
+        });
+
+        $('#myModal').on('hidden.bs.modal',
+            function () {
+                ModalReset();
+            });
+
+        $('#myDT tbody').on('click', '.glyphicon-eye-open', function () {
+            var dtIndex = $DTable.row($(this).parents('tr')).index();
+            var rowData = $DTable.row(dtIndex).data();
+            window.location.replace("http://localhost:56892/Parcel?farmId=" + rowData.Id);
+        });
+
+        $('#myDT tbody').on('click', '.glyphicon-plus-sign, .glyphicon-minus-sign', function () {
+            var tr = $(this).parents('tr');
+            var row = $DTable.row(tr);
+            var FirstClass = 'glyphicon-plus-sign';
+            var SecondClass = 'glyphicon-minus-sign';
+            if (row.child.isShown()) {
+                row.child.hide();
+                tr.removeClass('shown');
+                SwapIcon(this, SecondClass, FirstClass);
+
+            } else {
+                SwapIcon(this, FirstClass, SecondClass);
+                setDropTable(row);
+                //row.child(format(Data)).show();
+                row.child(format(row.data().Authors)).show(); //-llamando directamente del objecto-/////////////////////////////////////////////////////////////////////////////////////////////
+                tr.addClass('shown');
+            }
+        });
+
+    });
+
+    function SwapIcon(pSelector, pRClass, pAClass) {
+        $(pSelector).addClass(pAClass);
+        $(pSelector).removeClass(pRClass);
+    }
+
+    function setDataTable(Data) {
+        $DTable = $('#myDT').DataTable({
+            "data": Data,
+            "columns": [
+                { 'defaultContent': "<span class=\"glyphicon glyphicon-plus-sign\"></span>" },
+                { "data": "Id" },
+                { "data": "Name" },
+                { "data": "Description" },
+                { 'defaultContent': "<span class=\"glyphicon glyphicon-edit\"></span> | <span class=\"glyphicon glyphicon-trash data-toggle=\"modal\" data-target=\"#myModal\"></span> |<span class='glyphicon glyphicon-eye-open''></span>" }
+            ],
+            responsive: true,
+            "columnDefs": [
+                {
+                    "targets": [0, 4],
+                    "sortable": false
+                }
+            ]
+
+        });
+    }
+      
+    function pError() {
+        if (!$("p[class='ErrorClass']").length) {
+            $(".table").append("<p class='ErrorClass' style='color: red;'>An error has occurred while processing the data </p>");
+        }
+    }
+
+    function edit() {
+        $.ajax({
+            type: "PUT",
+            url: "http://localhost:56892/Farm/UpdateFarm",
+            data: JSON.stringify({
+                Id: $("#Id").text(),
+                Name: $("#NameInput").val(),
+                Description: $("#DescriptionInput").val()
+            }),
+            dataType: "json",
+            contentType: 'application/json; charset=utf-8',
+            success: function (Data) {
+                if (Data) {
+
+                    var dtIndex = $("#hiddenModalInput").val();
+                    console.log(dtIndex);
+                    $DTable.row(dtIndex).data(Data).draw();
+                } else {
+                }
+            },
+            error: function () {
+            }
+        });
+    }
+
+    function add() {
+        $.ajax({
+            type: "POST",
+            url: "http://localhost:56892/Farm/AddFarm",
+            data: JSON.stringify({
+                Name: $("#NameInput").val(),
+                Description: $("#DescriptionInput").val()
+            }),
+            dataType: "json",
+            contentType: 'application/json; charset=utf-8',
+            success: function (data) {
+                if (data) {
+                    $DTable.row.add(data).draw();
+                } else {
+
+                }
+            },
+            error: function () {
+
+            }
+        });
+    }
+
+    function ModalReset() {
+        $('#btnEdit').css('display', 'none');
+        $('#btnAdd').css('display', 'inline');
+        $("#myModalForm div input[type='text']").val("");
+        $("#myModalForm div input[type='text']").each(function () {
+            $(this).parent("div").removeClass("has-error");
+        });
+        $("#Id").parent().hide();
+    }
+
+</script>
+
+
+
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Add Farm|
+                <span class="glyphicon glyphicon-folder-open" id="addFarm" data-toggle="modal" data-target="#exampleModal" />
+            </div>
+            <div class="panel-body">
+                <table class="table table-striped table-bordered table-hover" id="myDT">
+                    <thead>
+                        <tr>
+                            @*<th>needed or not?
+
+                            </th>*@
+                            <th>
+                                <label>Id</label>
+                            </th>
+                            <th>
+                                <label>Name</label>
+                            </th>
+                            <th>
+                                <label>Description</label>
+                            </th>
+                            <th>
+                                <label>Buttons</label>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal" id="myModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="myModalHeadAdd">Farm</h4>
+            </div>
+            <div id="myModalBody" class="modal-body">
+                <form id="myModalForm">
+                    <div class="form-group">
+                        <label class="control-label">Id:</label>
+                        <label id="Id"></label>
+                    </div>
+                    <div class="form-group">
+                        <label>Name:</label>
+                        <input type="text" class="form-control" id="NameInput">
+                    </div>
+                    <div class="form-group">
+                        <label>Description:</label>
+                        <input type="text" class="form-control" id="DescriptionInput">
+                    </div>
+
+                    <input type="text" class="form-control" style="display:none" id="hiddenInput">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btnClose" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" id="btnAdd" class="btn btn-primary" onclick="add()" data-dismiss="modal">Add Farm</button>
+                <button type="button" id="btnEdit" class="btn btn-primary" style="display:none" onclick="edit()" data-dismiss="modal">Edit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div>
+    <div class="modal fade" id="myDeleteModal" role="checkbox">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Delete Confirmation</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Sure you want to delete?</p>
+                    <input type="text" class="form-control" style="display:none" id="hiddenModalInput">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" id="deleteBtn" data-dismiss="modal">Delete</button>
+                    <button type="button" class="btn btn-default" id="cancelBtn" data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
