@@ -28,6 +28,7 @@
 <body>
     <script>
         $("document").ready(function () {
+
             $SummerNote = $("#Summernote").summernote({
                 height: 125,
                 codemirror: { theme: 'monokai' }
@@ -44,7 +45,7 @@
                     console.log(pData)
 
                     for (var i = 0; i < pData.length; i++) {
-                        console.log(pData[i].ShowMore);
+                        
                         pData[i].ShowMore = "<span class='glyphicon glyphicon-download' class='Shown'>";
                         pData[i].Buttons = "<span class='glyphicon glyphicon-remove-circle'> |</span>" + "<span class='glyphicon glyphicon-ok-circle'></span>";
                     }
@@ -75,17 +76,89 @@
                     console.log("Jaja Salu2");
                 }
             });//Close AJAX GET
+            //$.ajax({
+            //    type: "GET",
+            //    url: "http://localhost:56892/Farm/getFarm",
+            //    data: "",
+            //    dataType: "json",
+            //    contentType: 'application/json; charset=utf-8',
+            //    success: function (pData) {
+                  
+            //    },
+            //    error: function () {
+            //        console.log("Jaja Salu2");
+            //        WarningMessage();
+            //    }
+            //});//Close AJAX GET For Edit
+            $("#AddFarm").click(function () {
+                $.ajax({
+                    type: "POST",
+                    url: "http://localhost:56892/Farm/AddFarm",
+                    data: JSON.stringify({
+                        ShowMore: "<span class='glyphicon glyphicon-download' class='Shown'>",
+                        Name: $("#Name").val(),
+                        Description: $SummerNote.code(),
+                        Buttons: "<span class='glyphicon glyphicon-remove-circle'> |</span>" + "<span class='glyphicon glyphicon-ok-circle'></span>"
+                    }),
+                    dataType: "json",
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (pData) {
+                        var ObjPostData = {
+                            ShowMore: "<span class='glyphicon glyphicon-download' class='Shown'>",
+                            Id: pData.Id,
+                            Name: $("#Name").val(),
+                            Description:$SummerNote.code(),
+                            Buttons: "<span class='glyphicon glyphicon-remove-circle'> |</span>" + "<span class='glyphicon glyphicon-ok-circle'></span>"
+                        }
+                        console.log(pData);
+                        console.log(ObjPostData);
+                        $Table
+                            .row
+                            .add(ObjPostData)
+                            .draw();
+                        CloseModal();
+                    },
+                    error: function () {
+
+                    }
+                });//Close AJAX GET
+            });//Close Add function
+
+            $("#tbody").on("click", ".glyphicon-ok-circle", function () {
+                $("#AddFarm").css("display", "none");
+                $("#EditRow").css("display", "inline");
+
+                var Row = $(this).parents("tr");
+                var Index = $table.row(Row).index();
+                var Data = $table.row(Index).data();
+
+                $("#Id").val(Data[0]);
+                $("#Name").val(Data[1]);
+                $SummerNote.code(Data[2]);
+                $("#hidden").val(Index);
+                $("#myModal").modal();
+
+
+            });
 
         });//Close Document Ready
+
 /*********************************************FUNCTIONS AREA**********************************************/
         function OpenModal()
         {
             $("#myModal").modal();
             $("#EditRow").css("display", "none");
-            $("#AddRow").css("display", "inline");
+            $("#AddFarm").css("display", "inline");
         }
-
-
+        function CloseModal()
+        {
+            $("#myModal").modal("hide");
+        }
+        function WarningMessage() {
+            if (!$('div[class="alert-danger"]').length) {
+                $("#myDT").prepend('<div class="alert alert-danger">< strong > Omaiga!</strong >Something went wrong >:O</div >');
+            }
+        }//Close Warning Message function
     </script>
     <style>
         #hidden {
@@ -97,7 +170,7 @@
     </style>
 
 
-
+    <!------------------------------------------MAIN TABLE------------------------------------------>
     Add Row | <span><button id="AddRowModal" class="btn btn-success btn btn-default glyphicon glyphicon-plus-sign" type="button" onclick="OpenModal()"></button></span>
     <table id="MainTable" class="table table-striped table-bordered" cellspacing="0">
         <thead>
@@ -121,6 +194,9 @@
             </tr>
         </thead>
     </table>
+    <!------------------------------------------MAIN TABLE------------------------------------------>
+
+
    <!------------------------------------------MODAL------------------------------------------>
     <div class="modal fade" id="myModal" role="dialog">
         <div class="modal-dialog">
@@ -132,10 +208,18 @@
                     <h4><span class="glyphicon glyphicon-add"></span> Add Farm Information :3</h4>
                 </div>
                 <div class="modal-body" id="modal-body" style="padding:40px 50px;">
+                    
                     <form role="form">
+
+                        <div class="form-group">
+                            <label for="usrname"><span class="glyphicon glyphicon-user"></span> Id</label>
+                            <input type="text" class="form-control NewOne" id="Id" placeholder="Enter First Value">
+                        </div>
+
+
                         <div class="form-group">
                             <label for="usrname"><span class="glyphicon glyphicon-user"></span> Name</label>
-                            <input type="text" class="form-control NewOne" id="FirstName" placeholder="Enter First Value">
+                            <input type="text" class="form-control NewOne" id="Name" placeholder="Enter First Value">
                         </div>
                         <div class="form-group">
                             <label for="usrname"><span class="glyphicon glyphicon-user"></span> Description</label> 
@@ -146,7 +230,7 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-success btn-block" id="AddRow"><span class="glyphicon glyphicon-record"></span> Add the row</button>
+                    <button type="submit" class="btn btn-success btn-block" id="AddFarm"><span class="glyphicon glyphicon-record"></span> Add the Farm</button>
                     <button type="submit" class="btn btn-success btn-block Display" id="EditRow"><span class="glyphicon glyphicon-record"></span> Edit the row</button>
                     <button type="submit" class="btn btn-success btn-block" id="CloseModal" onclick="CloseModal()"><span class="glyphicon glyphicon-remove-circle"></span> Cancel </button>
                 </div>
