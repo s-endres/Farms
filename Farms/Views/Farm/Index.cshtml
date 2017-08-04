@@ -1,5 +1,4 @@
-﻿
-@{
+﻿@{
     ViewBag.Title = "Farms";
 }
 
@@ -42,7 +41,7 @@
                 dataType: "json",
                 contentType: 'application/json; charset=utf-8',
                 success: function (pData) {
-                    console.log(pData)
+                    
 
                     for (var i = 0; i < pData.length; i++) {
                         
@@ -73,23 +72,42 @@
    
                 },
                 error: function () {
-                    console.log("Jaja Salu2");
+                    WarningMessage();
                 }
             });//Close AJAX GET
-            //$.ajax({
-            //    type: "GET",
-            //    url: "http://localhost:56892/Farm/getFarm",
-            //    data: "",
-            //    dataType: "json",
-            //    contentType: 'application/json; charset=utf-8',
-            //    success: function (pData) {
-                  
-            //    },
-            //    error: function () {
-            //        console.log("Jaja Salu2");
-            //        WarningMessage();
-            //    }
-            //});//Close AJAX GET For Edit
+            $("#EditRow").click(function () {
+
+
+                ObjEdit = {
+                    ShowMore:"<span class='glyphicon glyphicon-download' class='Shown'>",
+                    Id: $("#Id").val(),
+                    Name: $("#Name").val(),
+                    Description: $SummerNote.code(),
+                    Buttons: "<span class='glyphicon glyphicon-remove-circle'> | </span>" + "<span class='glyphicon glyphicon-ok-circle'></span>"
+                };
+                $.ajax({
+                    type: "PUT",
+                    url: "http://localhost:56892/Farm/UpdateFarm",
+                    data: JSON.stringify(ObjEdit),
+                    dataType: "json",
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (pData) {
+                        $Table
+                          .row($("#hidden").val())
+                          .data(ObjEdit)
+                          .draw();
+                        CloseModal();
+                        
+
+                    },
+                    error: function () {
+                        console.log("Jaja Salu2");
+                        WarningMessage();
+                    }
+                });//Close AJAX PUT For Edit
+            });//Edit Funcction
+
+
             $("#AddFarm").click(function () {
                 $.ajax({
                     type: "POST",
@@ -108,10 +126,10 @@
                             Id: pData.Id,
                             Name: $("#Name").val(),
                             Description:$SummerNote.code(),
-                            Buttons: "<span class='glyphicon glyphicon-remove-circle'> |</span>" + "<span class='glyphicon glyphicon-ok-circle'></span>"
+                            Buttons: "<span class='glyphicon glyphicon-remove-circle'> | </span>" + "<span class='glyphicon glyphicon-ok-circle'></span>"
                         }
-                        console.log(pData);
-                        console.log(ObjPostData);
+                        //console.log(pData);
+                        //console.log(ObjPostData);
                         $Table
                             .row
                             .add(ObjPostData)
@@ -124,23 +142,68 @@
                 });//Close AJAX GET
             });//Close Add function
 
-            $("#tbody").on("click", ".glyphicon-ok-circle", function () {
+            $("tbody").on("click", ".glyphicon-ok-circle", function () {
+                $("#myModal").modal();
                 $("#AddFarm").css("display", "none");
                 $("#EditRow").css("display", "inline");
 
                 var Row = $(this).parents("tr");
-                var Index = $table.row(Row).index();
-                var Data = $table.row(Index).data();
-
-                $("#Id").val(Data[0]);
-                $("#Name").val(Data[1]);
-                $SummerNote.code(Data[2]);
+                var Index = $Table.row(Row).index();
+                var Data = $Table.row(Index).data();
+               
+                $("#Id").val(Data.Id);
+                $("#Name").val(Data.Name);
+                $SummerNote.code(Data.Description);
                 $("#hidden").val(Index);
-                $("#myModal").modal();
+                
+            });//Opens the edit Modal
+
+            $("tbody").on("click", ".glyphicon-remove-circle", function () {
+                var Row = $(this).parents("tr");
+                var Index = $Table
+                    .row(Row)
+                    .index();
+                $("#hidden").val(Index);
+                //$("#myModal").modal();
+                var Index2 = $("#hidden").val();
+
+                $("#hidden2").val(Index);
+                $("#myDeleteModal").modal();
 
 
-            });
+            });//Obtains the index value of the row for the Delete
 
+            $("#YesDelete").click(function () {
+                
+                ObjDelete = { farmId: $Table.row($("#hidden2").val()).data().Id }
+                console.log(ObjDelete);
+                $.ajax({
+                    type: "DELETE",
+                    url: "http://localhost:56892/Farm/RemoveFarm",
+                    data: JSON.stringify({ farmId: $Table.row($("#hidden2").val()).data().Id }),
+                    dataType: "json",
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (Data) {
+                        
+                        if (Data) {
+                            $Table.row($("#hidden2").val()).remove().draw();
+                            $("#myDeleteModal").modal("hide");
+                        }
+                        else {
+                            if (!$('div[class="alert-danger"]').length) {
+                                $("#myDT").prepend('<div class="alert alert-danger">< strong > Omaiga!</strong >Failed deleting the row ToT</div >');
+                            }
+                        }
+                    },
+                    error: function () {
+                        WarningMessage();
+                    }
+                });//Close Delete Ajax
+            })//Confirmation Modal Delete;
+
+            $("#NoDelete").click(function () {
+                $("#myDeleteModal").modal("hide");
+            });//Confirmation Modal
         });//Close Document Ready
 
 /*********************************************FUNCTIONS AREA**********************************************/
@@ -149,6 +212,9 @@
             $("#myModal").modal();
             $("#EditRow").css("display", "none");
             $("#AddFarm").css("display", "inline");
+            $("#Id").css("display", "none");
+            $(".modal-content .form-control").not(".hidden").not(".hidden2").val("");
+            $SummerNote.code("");
         }
         function CloseModal()
         {
@@ -190,8 +256,9 @@
                 <th>
                     <label>Buttons</label>
                 </th>
-
             </tr>
+            <tbody>
+            </tbody>
         </thead>
     </table>
     <!------------------------------------------MAIN TABLE------------------------------------------>
@@ -213,7 +280,7 @@
 
                         <div class="form-group">
                             <label for="usrname"><span class="glyphicon glyphicon-user"></span> Id</label>
-                            <input type="text" class="form-control NewOne" id="Id" placeholder="Enter First Value">
+                            <input type="text" class="form-control NewOne" id="Id" readonly>
                         </div>
 
 
