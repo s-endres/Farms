@@ -2,8 +2,6 @@
 @{
     ViewBag.Title = "Create";
 }
-<!-- MetisMenu CSS -->
-<link href="/bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
 <!-- DataTables CSS -->
 <link href="/bower_components/datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.css" rel="stylesheet">
 <!-- DataTables Responsive CSS -->
@@ -37,6 +35,11 @@
 
 <script>
     $(document).ready(function () {
+        $.urlParam = function (name) {
+            var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+            return results[1] || 0;
+        }
+
         $table = $('#myTable').DataTable({
             responsive: true,
             "columnDefs": [
@@ -98,8 +101,40 @@
             $("#myModal .alert").remove();
         });
 
-        $("btnSave").click(function () {
-
+        $("#btnSave").click(function () {
+            if (Validate() && ValidateTable()) {
+                var Arreglo = [];
+                $table.rows().every(function () {
+                    Arreglo.push({
+                        Id: this.index(),
+                        Description: this.data().Description
+                    });
+                });
+                console.log($("#Size").val());
+                $.ajax({
+                    type: "POST",
+                    url: "http://localhost:56892/Parcel/AddParcel",
+                    dataType: "json",
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify({
+                        Size: $("#Size").val(),
+                        Description: $SummerNote.code(),
+                        IdFarm: $.urlParam("farmId"),
+                        Observations: Arreglo,
+                        ConditionIds: $("#Select2").val() 
+                    }),
+                    success: function (data) {
+                        if (!data) {
+                            AddRemove("Alert", "Error!");
+                        } else {
+                            window.location.replace("http://localhost:56892/Parcel?IdFarm=" + $.urlParam("farmId"));
+                        }
+                    },
+                    error: function () {
+                        AddRemove("Error", "Alert!");
+                    }
+                });
+            }
         });
     });
 
@@ -166,20 +201,21 @@
 
     function Validate() {
         var validate = true;
-        if ($("Size").val() == "" || $("Size").val() <= 0) {
+        if ($("#Size").val() == "" || $("Size").val() <= 0) {
             validate = false;
-            $("Size").addClass("Error")
+            $("#Size").addClass("Error")
         } else {
-            $("Size").removeClass("Error")
+            $("#Size").removeClass("Error")
         }
         if ($SummerNote.code() == "<p><br></p>" || $SummerNote.code() == "") {
             validate = false;
             AddRemove("SummerNoteError", "Empty Description");
         }
-        if ($("Select2").val() == null) {
+        if ($("#Select2").val() == null) {
             validate = false;
             AddRemove("SelectError", "Without conditions");
         }
+        return validate;
     }
 </script>
 

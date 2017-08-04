@@ -71,7 +71,7 @@
         });
 
         $('#myModal').on('hidden.bs.modal', function () {
-            $('#myModal input[class="form-control"]').val("");
+            $('#myModal .validation').val("");
             $SummerNote.code("");
             $("#myModal .alert").remove();
         });
@@ -85,7 +85,7 @@
                     contentType: 'application/json; charset=utf-8',
                     data: JSON.stringify({
                         Name: $("#Name").val(),
-                        Description: $("#Description").code()
+                        Description: $SummerNote.code()
                     }),
                     success: function (data) {
                         if (!data) {
@@ -114,7 +114,7 @@
                     data: JSON.stringify({
                         Id: $("#Id").text(),
                         Name: $("#Name").val(),
-                        Description: $("#Description").val()
+                        Description: $SummerNote.code()
                     }),
                     success: function (data) {
                         if (!data) {
@@ -193,7 +193,7 @@
 
     function validateInputs() {
         var validate = true;
-        $('#myModal input[class="form-control"]').each(function () {
+        $('#myModal .validation').each(function () {
             if ($(this).val().trim() == "") {
                 $(this).addClass("Error");
                 validate = false;
@@ -226,6 +226,70 @@
         }
         return true;
     }
+
+    $(document).on('click', '.glyphicon-hand-right, .glyphicon-hand-down', function () {
+        var tr = $(this).parents('tr');
+        var row = $table.row(tr);
+        if (row.child.isShown()) {
+            row.child.hide();
+            tr.removeClass('shown');
+            ChangeIcon(this, 'glyphicon-hand-right', 'glyphicon-hand-down');
+        } else {
+            //row.child(format(row.data().Authors)).show();
+            getParcels(row);
+            tr.addClass('shown');
+            ChangeIcon(this, 'glyphicon-hand-down', 'glyphicon-hand-right');
+        }
+    });
+
+    function format(data) {
+        var Table = '<table width="100%"><thead><tr><th>Parcel</th><th>Count</th></tr></thead><tbody>'
+        for (var i = 0; i < data.length; i++) {
+            Table += '<tr><td>' + data[i].Parcel + '</td><td>' + data[i].Count + '</td></tr>';
+        }
+        return Table + '</tbody></table>';
+    }
+
+    function formatError() {
+        return '<div class="alert alert-info"><strong>Info!</strong> Empty table.</div>'
+    }
+
+    function ChangeIcon(Element, add, remove) {
+        $(Element).addClass(add);
+        $(Element).removeClass(remove);
+    }
+
+    function getParcels(row) {
+        $.ajaxSetup({ async: false })
+        $.ajax({
+            type: "GET",
+            url: "http://localhost:56892/Parcel/GetAllParcelByFarmId",
+            dataType: "json",
+            contentType: 'application/json; charset=utf-8',
+            data: { farmId: row.data().Id },
+            success: function (data) {
+                if (data.length > 0) {
+                    var Array = [];
+                    for (var i = 0; i < data.length; i++) {
+                        var Id = data[i].Id;
+                        var Obj = {
+                            Parcel: data[i].Description
+                        }
+                        $.get('http://localhost:56892/Plant/GetAllPlantsByParcelId', { parcelId: Id }, function (plantData) {
+                            Obj.Count = plantData.length;
+                        });
+                        Array.push(Obj);
+                    }
+                    row.child(format(Array)).show();
+                } else {
+                    row.child(formatError()).show();
+                }
+            },
+            error: function () {
+
+            }
+        });
+    }
 </script>
 
 <table id="myTable" class="table table-striped table-bordered">
@@ -255,7 +319,7 @@
                 <label id="Id"></label>
                 <div class="form-group">
                     <label for="Name">Name:</label>
-                    <input type="text" class="form-control" id="Name">
+                    <input type="text" class="form-control validation" id="Name">
                 </div>
                 <div class="form-group">
                     <label for="Description">Description:</label>
