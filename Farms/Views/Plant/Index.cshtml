@@ -1,5 +1,323 @@
-﻿
+﻿@*Plants Index*@
 @{
-    ViewBag.Title = "Plants";
+    ViewBag.PlantsHeader = "Plants";
 }
-<h2>Plants</h2>
+<!-- DataTables JavaScript -->
+<script src="/bower_components/datatables/media/js/jquery.dataTables.min.js"></script>
+<script src="/bower_components/datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.min.js"></script>
+<link href="/bower_components/select2/css/select2.min.css" rel="stylesheet" type="text/css">
+<script src="/bower_components/select2/js/select2.min.js"></script>
+<!-- Summernote -->
+<link href="/bower_components/summernote/css/summernote.css" rel="stylesheet" type="text/css">
+<script src="/bower_components/summernote/js/summernote.min.js"></script>
+<!-- Custom Fonts -->
+<link href="/bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+<!-- Select 2-->
+<link href="/bower_components/select2/css/select2.min.css" rel="stylesheet" type="text/css">
+<script src="/bower_components/select2/js/select2.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+
+        $.urlParam = function (name) {
+            var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+            return results[1] || 0;
+        }
+
+        $summernote = $(".summernote").summernote({
+            height: 100
+        })
+
+        $.get('http://localhost:56892/Parcel/GetParcel?parcelId=' + $.urlParam('parcelId'), function (data) {
+            $("#PlantsHeader").text("Plants - " + data.Description);
+        });
+
+        $.get('http://localhost:56892/Plant/GetAllPlantsByParcelId?parcelId=' + $.urlParam('parcelId'), function (data) {
+            $.each(data, function () {
+                var currentPlant = this;
+                $.ajaxSetup({ async: false });
+                $.get('http://localhost:56892/Plant/GetTypePlantById?plantTypeId=' + currentPlant.PlantType, function (dataType) {
+                    currentPlant.PlantName = dataType.Name;
+                    //currentPlant.PlantType = dataType.Name;
+                });
+            });
+
+            setDataTable(data);
+        });
+
+
+        $.ajax({
+            type: "GET",
+            url: "http://localhost:56892/Plant/GetAllPlantTypes",
+            data: "",
+            dataType: "json",
+            contentType: 'application/json; charset=utf-8',
+            success: function (data) {
+                if (data) {
+                    $.each(data, function () {
+                        $("#PlantType").append("<option value='" + this.Id + "'>" + this.Name + "</option>");
+                    });
+                } else {
+
+                }
+            },
+            error: function () {
+
+            }
+        });
+
+        $('#myModal').on('hidden.bs.modal', function () {
+            ModalReset();
+        });
+
+        $(document).on('click', '.glyphicon-folder-open', function () {
+            ModalReset();
+        });
+
+        $('#myDT tbody').on('click', '.glyphicon-trash', function () {
+            $("#myDeleteModal").modal();
+            var RowHTML = $(this).parents('tr');
+            $("#hiddenModalInput").val($DTable.row(RowHTML).index());
+        });
+
+        $('#deleteBtn').on('click', function () { 
+            var rtIndex = $("#hiddenModalInput").val();
+            var dtData = $DTable.row(rtIndex).data();
+
+            $.ajax({
+                type: "DELETE",
+                url: "http://localhost:56892/Plant/RemovePlant",
+                data: JSON.stringify({
+                    plantId: dtData.Id
+                }),
+                dataType: "json",
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    if (data) {
+                        $DTable.row(rtIndex).remove().draw();
+                    } 
+                },
+                error: function () {
+
+                }
+            });
+        });
+
+        $('#myDT tbody').on('click', '.glyphicon-edit', function () {
+            $("#myModal").modal();
+            var RowHTML = $(this).parents('tr');
+            var dtIndex = $DTable.row(RowHTML).index();
+            var data = $DTable.row(dtIndex).data(); 
+            console.log(data);
+            $('#btnEdit').css('display', 'inline');
+            $('#btnAdd').css('display', 'none');
+            $("#Id").text(data.Id);
+            $("#Name").val(data.Name);
+            $summernote.code(data.Description);
+            $("#PlantedDate").val(data.PlantedDate);
+            $("#PlantType").val(data.PlantType);
+            $("#hiddenModalInput").val(dtIndex);
+        });
+    });
+
+    function setDataTable(Data) {
+        $DTable = $('#myDT').DataTable({
+            "processing": true,
+            "data": Data,
+            "columns": [
+                { "data": "Id" },
+                { "data": "Name" },
+                { "data": "Description" },
+                { "data": "PlantedDate" },
+                { "data": "PlantName" },
+                { "defaultContent": "<span class='glyphicon glyphicon-trash'></span> <span> | </span> <span class='glyphicon glyphicon-edit''></span>" }
+            ],
+            responsive: true,
+            "columnDefs": [
+                {
+                    "targets": [0, 4],
+                    "orderable": false
+                }
+            ]
+        });
+    }
+
+    function ModalReset() {
+        $('#btnEdit').css('display', 'none');
+        $('#btnAdd').css('display', 'inline');
+        $("#myModalForm div input[type='text']").val("");
+        $summernote.code("");
+        $("#PlantedDate").val("");
+        $("#PlantType").val("");
+        $("#Id").text("");
+
+        $("#myModalForm div input[type='text']").each(function () {
+            $(this).parent("div").removeClass("has-error");
+        });
+    }
+
+    function add() {
+        $.ajax({
+            type: "POST",
+            url: "http://localhost:56892/Plant/AddPlant",
+            data: JSON.stringify({
+                Name: $("#Name").val(),
+                Description: $summernote.code(),
+                PlantedDate: $("#PlantedDate").val(),
+                IdParcel: $.urlParam('parcelId'),
+                PlantType: $("#PlantType").val()
+            }),
+            dataType: "json",
+            contentType: 'application/json; charset=utf-8',
+            success: function (data) {
+                if (data) {
+                    $.ajaxSetup({ async: false });
+                    $.get('http://localhost:56892/Plant/GetTypePlantById?plantTypeId=' + data.PlantType, function (dataType) {
+                        data.PlantName = dataType.Name;
+                    });
+                    $DTable.row.add(data).draw();
+                } else {
+
+                }
+            },
+            error: function () {
+
+            }
+        });
+    }
+
+
+     function edit() {
+            $.ajax({
+                type: "PUT",
+                url: "http://localhost:56892/Plant/UpdatePlant",
+                data: JSON.stringify({
+                    Id: $("#Id").text(),
+                    Name: $("#Name").val(),
+                    Description: $summernote.code(),
+                    PlantedDate: $("#PlantedDate").val(),
+                    IdParcel: $.urlParam('parcelId'),
+                    PlantType: $("#PlantType").val()
+                }),
+                dataType: "json",
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    if (data) {
+                        var dtIndex = $("#hiddenModalInput").val();
+                        $.ajaxSetup({ async: false });
+                        $.get('http://localhost:56892/Plant/GetTypePlantById?plantTypeId=' + data.PlantType, function (dataType) {
+                            data.PlantName = dataType.Name;
+                        });
+                        $DTable.row(dtIndex).data(data).draw(); 
+                    } else {
+
+                    }
+                },
+                error: function () { 
+                }
+            });
+        }
+
+
+</script>
+<h2 id="PlantsHeader"></h2>
+
+@*DataTable*@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Plants|
+                <span class="glyphicon glyphicon-folder-open" id="addPlant" data-toggle="modal" data-target="#myModal" />
+            </div>
+            <div class="panel-body">
+                <table class="table table-striped table-bordered table-hover" id="myDT">
+                    <thead>
+                        <tr>
+                            <th>
+                                <label>Id</label>
+                            </th>
+                            <th>
+                                <label>Name</label>
+                            </th>
+                            <th>
+                                <label>Description</label>
+                            </th>
+                            <th>
+                                <label>Planted Date</label>
+                            </th>
+                            <th>
+                                <label>Plant Type</label>
+                            </th>
+                            <th>
+                                <label>Buttons</label>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div> 
+
+@*Modal*@
+<div class="modal" id="myModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="myModalHeadAdd">Observations</h4>
+            </div>
+            <div id="myModalBody" class="modal-body">
+                <form id="myModalForm">
+                    <div class="form-group">
+                        <label class="control-label">Id:</label>
+                        <label id="Id"></label>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">Name:</label>
+                        <input type="text" class="form-control" id="Name">
+                    </div>
+                    <div class="form-group">
+                        <label>Description:</label>
+                        <textarea id="DescriptionModalSummernote" class="summernote"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">PlantedDate:</label>
+                        <input type="date" class="form-control" id="PlantedDate">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">PlantType:</label>
+                        <select id="PlantType" class="form-control"></select>
+                    </div>
+                    <input type="text" class="form-control" style="display:none" id="hiddenModalInput">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btnClose" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" id="btnAdd" class="btn btn-primary" onclick="add()" data-dismiss="modal">Add</button>
+                <button type="button" id="btnEdit" class="btn btn-primary" style="display:none" onclick="edit()" data-dismiss="modal">Edit</button>
+            </div>
+        </div>
+    </div>
+</div>
+@* DeleteModal *@
+<div>
+    <div class="modal fade" id="myDeleteModal" role="checkbox">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Delete Confirmation</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Sure you want to delete?</p>
+                    <input type="text" class="form-control" style="display:none" id="hiddenModalInput">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" id="deleteBtn" data-dismiss="modal">Delete</button>
+                    <button type="button" class="btn btn-default" id="cancelBtn" data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

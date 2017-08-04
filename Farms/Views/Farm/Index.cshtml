@@ -1,4 +1,4 @@
-﻿
+﻿@*Farm Index*@
 @{
     ViewBag.Title = "Farms";
 }
@@ -18,19 +18,7 @@
 
 <script>
     $(document).ready(function () {
-
-        //$DTable = $('#myDT').DataTable({
-
-        //    responsive: true,
-        //    "columnDefs": [
-        //        {
-        //            "targets": [4],
-        //            "sortable": false
-        //        }
-        //    ]
-
-        //});
-
+        
         $summernote = $(".summernote").summernote({
             height: 100
         });
@@ -72,7 +60,7 @@
         $(document).on('click', '.glyphicon-folder-open', function () {
             $("#myModal").modal();
         });
-
+         
         $('#myDT tbody').on('click', '.glyphicon-edit', function () {
             $("#myModal").modal();
             $("#Id").parent().show();
@@ -83,11 +71,10 @@
             var Data = $DTable.row(RowHTML).data();
             $("#Id").text(Data.Id);
             $("#NameInput").val(Data.Name);
-            $("#DescriptionInput").val(Data.Description);
+            $summernote.code(Data.Description);
         });
 
-        $('#myModal').on('hidden.bs.modal',
-            function () {
+        $('#myModal').on('hidden.bs.modal', function () {
                 ModalReset();
             });
 
@@ -143,7 +130,7 @@
 
         });
     }
-      
+
     function pError() {
         if (!$("p[class='ErrorClass']").length) {
             $(".table").append("<p class='ErrorClass' style='color: red;'>An error has occurred while processing the data </p>");
@@ -157,7 +144,7 @@
             data: JSON.stringify({
                 Id: $("#Id").text(),
                 Name: $("#NameInput").val(),
-                Description: $("#DescriptionInput").val()
+                Description: $summernote.code(),
             }),
             dataType: "json",
             contentType: 'application/json; charset=utf-8',
@@ -165,7 +152,6 @@
                 if (Data) {
 
                     var dtIndex = $("#hiddenModalInput").val();
-                    console.log(dtIndex);
                     $DTable.row(dtIndex).data(Data).draw();
                 } else {
                 }
@@ -181,7 +167,7 @@
             url: "http://localhost:56892/Farm/AddFarm",
             data: JSON.stringify({
                 Name: $("#NameInput").val(),
-                Description: $("#DescriptionInput").val()
+                Description: $summernote.code()
             }),
             dataType: "json",
             contentType: 'application/json; charset=utf-8',
@@ -218,15 +204,15 @@
         <div class="panel panel-default">
             <div class="panel-heading">
                 Add Farm|
-                <span class="glyphicon glyphicon-folder-open" id="addFarm" data-toggle="modal" data-target="#exampleModal" />
+                <span class="glyphicon glyphicon-folder-open" id="addFarm" data-toggle="modal" data-target="#myModal" />
             </div>
             <div class="panel-body">
                 <table class="table table-striped table-bordered table-hover" id="myDT">
                     <thead>
                         <tr>
-                            @*<th>needed or not?
-
-                            </th>*@
+                            <th>
+                                <label>Show More</label>
+                            </th>
                             <th>
                                 <label>Id</label>
                             </th>
@@ -265,7 +251,7 @@
                     </div>
                     <div class="form-group">
                         <label>Description:</label>
-                        <input type="text" class="form-control" id="DescriptionInput">
+                        <textarea id="DescriptionSummernote" class="summernote"></textarea>
                     </div>
 
                     <input type="text" class="form-control" style="display:none" id="hiddenInput">

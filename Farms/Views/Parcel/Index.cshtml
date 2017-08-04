@@ -1,4 +1,4 @@
-﻿
+﻿@*Parcel Index*@
 @{
     ViewBag.Title = "Parcel";
 }
@@ -23,11 +23,11 @@
         }
 
         $.get('http://localhost:56892/Farm/GetFarmsById?farmId=' + $.urlParam('farmId'), function (data) {
-            $("#title").text($("#title").text() + " - " + data.Name);
+            $("#ParcelHeader").text("Parcel - "+ data.Name);
         });
 
         $.get('http://localhost:56892/Parcel/GetAllParcelByFarmId?farmId=' + $.urlParam('farmId'), function (data) {
-            setDTWithData(data);
+            setDataTable(data);
         });
 
         $('#myDT tbody').on('click', '.glyphicon-trash', function () {
@@ -36,32 +36,86 @@
             $("#hiddenModalInput").val($DTable.row(RowHTML).index());
         });
 
-        $(document).on('click', '.glyphicon-folder-open', function () {
-            $("#myModal").modal();
+        $('.glyphicon-folder-open').on('click', function () {
+            window.location.replace("http://localhost:56892/Parcel/Create?farmId=" + $.urlParam('farmId'));
+        }); 
+
+        $('#myDT tbody').on('click', '.glyphicon-edit', function () { 
+            var dtIndex = $DTable.row($(this).parents('tr')).index();
+            var data = $DTable.row(dtIndex).data();
+            window.location.replace("http://localhost:56892/Parcel/Edit?parcelId=" + data.Id); 
         });
 
-        ('#myDT tbody').on('click', '.glyphicon-edit', function () {
-            $("#myModal").modal();
-            $("#Id").parent().show();
-            $('#btnEdit').css('display', 'inline');
-            $('#btnAdd').css('display', 'none');
+        $('#myDT tbody').on('click', '.glyphicon-trash', function () {
+            $("#myDeleteModal").modal();
             var RowHTML = $(this).parents('tr');
             $("#hiddenModalInput").val($DTable.row(RowHTML).index());
-            var Data = $DTable.row(RowHTML).data();
-            $("#Id").text(Data.Id);
-            $("#SizeInput").val(Data.Name);
-            $("#DescriptionInput").val(Data.Description);
         });
+
+        $('#deleteBtn').on('click', function () {
+            var RowHTML = $("#hiddenModalInput").val();
+
+            $.ajax({
+                type: "DELETE",
+                url: "http://localhost:56892/Parcel/RemoveParcel",
+                data: JSON.stringify({
+                    parcelId: $DTable.row(RowHTML).data().Id
+                }),
+                dataType: "json",
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    if (data) {
+                        $DTable.row(RowHTML).remove().draw();
+                    } else {
+                        alert();
+                    }
+                },
+                error: function () {
+                    alert();
+                }
+            });
+        });
+
+        $('#myDT tbody').on('click', '.glyphicon-eye-open', function () {
+            var dtindex = $DTable.row($(this).parents('tr')).index();
+            var rowData = $DTable.row(dtindex).data();
+            window.location.replace("http://localhost:56892/Plant?parcelId=" + rowData.Id);
+        });
+
 
     });
 
+    function edit() {
+        $.ajax({
+            type: "PUT",
+            url: "http://localhost:56892/Farm/UpdateParcel",
+            data: JSON.stringify({
+                Id: $("#Id").text(),
+                Name: $("#SizeInput").val(),
+                Description: $("#DescriptionInput").val()
+            }),
+            dataType: "json",
+            contentType: 'application/json; charset=utf-8',
+            success: function (Data) {
+                if (Data) {
+
+                    var dtIndex = $("#hiddenModalInput").val();
+                    console.log(dtIndex);
+                    $DTable.row(dtIndex).data(Data).draw();
+                } else {
+                }
+            },
+            error: function () {
+            }
+        });
+    }
 
     function setDataTable(Data) {
         $DTable = $('#myDT').DataTable({
             "processing": true,
             "data": Data,
             "columns": [
-                { "defaultContent": "<span class='glyphicon glyphicon-minus-sign showChild'></span>" },
+                { "defaultContent": "<span class='glyphicon glyphicon-plus-sign'></span>" },
                 { "data": "Id" },
                 { "data": "Size" },
                 { "data": "Description" },
@@ -78,33 +132,24 @@
     }
 
 
-    function ModalReset() {
-        $('#btnEdit').css('display', 'none');
-        $('#btnAdd').css('display', 'inline');
-        $("#myModalForm div input[type='text']").val("");
-        $("#myModalForm div input[type='text']").each(function () {
-            $(this).parent("div").removeClass("has-error");
-        });
-        $("#Id").parent().hide();
-    }
 </script>
 
-<h2>Parcel</h2> 
+<h2 id="ParcelHeader"></h2> 
 
 <div class="row">
     <div class="col-md-12">
         <div class="panel panel-default">
             <div class="panel-heading">
                 Add Parcel|
-                <span class="glyphicon glyphicon-folder-open" id="addParcel" data-toggle="modal" data-target="#exampleModal" />
+                <span class="glyphicon glyphicon-folder-open" id="addParcel"/>
             </div>
             <div class="panel-body">
                 <table class="table table-striped table-bordered table-hover" id="myDT">
                     <thead>
                         <tr>
-                            @*<th>needed or not?
-
-                            </th>*@
+                            <th>
+                                <label>Show More</label>
+                            </th>
                             <th>
                                 <label>Id</label>
                             </th>
@@ -121,38 +166,6 @@
                     </thead>
                     <tbody></tbody>
                 </table>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="modal" id="myModal">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="myModalHeadAdd">Farm</h4>
-            </div>
-            <div id="myModalBody" class="modal-body">
-                <form id="myModalForm">
-                    <div class="form-group">
-                        <label class="control-label">Id:</label>
-                        <label id="Id"></label>
-                    </div>
-                    <div class="form-group">
-                        <label>Size:</label>
-                        <input type="text" class="form-control" id="SizeInput">
-                    </div>
-                    <div class="form-group">
-                        <label>Description:</label>
-                        <input type="text" class="form-control" id="DescriptionInput">
-                    </div>
-
-                    <input type="text" class="form-control" style="display:none" id="hiddenInput">
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" id="btnClose" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" id="btnAdd" class="btn btn-primary" onclick="add()" data-dismiss="modal">Add Parcel</button>
-                <button type="button" id="btnEdit" class="btn btn-primary" style="display:none" onclick="edit()" data-dismiss="modal">Edit</button>
             </div>
         </div>
     </div>

@@ -1,5 +1,240 @@
-﻿
+﻿@*Parcel Edit*@
 @{
     ViewBag.Title = "Edit";
 }
+
+ 
+<!-- DataTables JavaScript -->
+<script src="/bower_components/datatables/media/js/jquery.dataTables.min.js"></script>
+<script src="/bower_components/datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.min.js"></script>
+<link href="/bower_components/select2/css/select2.min.css" rel="stylesheet" type="text/css">
+<script src="/bower_components/select2/js/select2.min.js"></script>
+<!-- Summernote -->
+<link href="/bower_components/summernote/css/summernote.css" rel="stylesheet" type="text/css">
+<script src="/bower_components/summernote/js/summernote.min.js"></script>
+<!-- Custom Fonts -->
+<link href="/bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+<!-- Select 2-->
+<link href="/bower_components/select2/css/select2.min.css" rel="stylesheet" type="text/css">
+<script src="/bower_components/select2/js/select2.min.js"></script>
+
 <h2>Edit</h2>
+
+<script>
+    $(document).ready(function () {
+        $.urlParam = function (name) {
+            var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+            return results[1] || 0;
+        }
+
+        $.get('http://localhost:56892/Parcel/GetParcel?parcelId=' + $.urlParam('parcelId'), function (data) {
+
+            $("#Size").val(data.Size);
+            $summernote.code(data.Description);
+            $("#FarmId").val(data.IdFarm);
+            $("#Conditions").val(data.ConditionIds).trigger("change"), 
+            $.each(data.Observations, function () {
+                $DTable.row.add([this.Description, "<span class='glyphicon glyphicon-trash'></span> <span> | </span> " +
+                    "<span class='glyphicon glyphicon-edit'></span>"]).draw();
+            });
+
+        });
+
+        $.get('http://localhost:56892/Parcel/GetAllConditions', function (data) {
+            $.each(data, function () {
+                $("#Conditions").append("<option value='" + this.Id + "'>" + this.Name + "</option>");
+            });
+        });
+
+        $summernote = $(".summernote").summernote({
+            height: 100
+        });
+
+        $("#Conditions").select2({
+            placeholder: "Select a condition"
+        });
+
+        $DTable = $('#myDT').DataTable();
+
+        $('#myDT tbody').on('click', '.glyphicon-trash', function () {
+            $("#myDeleteModal").modal();
+            var RowHTML = $(this).parents('tr');
+            $("#hiddenModalInput").val($DTable.row(RowHTML).index());
+
+        });
+
+        $('#deleteBtn').on('click', function () {
+            var RowHTML = $("#hiddenModalInput").val();
+            $DTable.row(RowHTML).remove().draw();
+        });
+
+        $('#myModal').on('hidden.bs.modal', function () {
+            ModalReset();
+        });
+
+        $('#myDT tbody').on('click', '.glyphicon-edit', function () {
+            $("#myModal").modal();
+            $('#btnEdit').css('display', 'inline');
+            $('#btnAdd').css('display', 'none');
+            var RowHTML = $(this).parents('tr');
+            $("#hiddenModalInput").val($DTable.row(RowHTML).index());
+            var Data = $DTable.row(RowHTML).data();
+            $("#DescriptionModalSummernote").code(Data[0]);
+        });
+
+        $("#btnSave").click(function () {
+
+            var observations = []
+            $($DTable.rows().data()).each(function (index, row) {
+                var Observation = {
+                    id: index,
+                    Description: row[0]
+                }
+                observations.push(Observation);
+            });
+
+            $.ajax({
+                type: "PUT",
+                url: "http://localhost:56892/Parcel/UpdateParcel",
+                data: JSON.stringify({
+                    Id: $.urlParam('parcelId'),
+                    Size: $("#Size").val(),
+                    Description: $summernote.code(),
+                    IdFarm: $("#FarmId").val(),
+                    Observations: observations,
+                    ConditionIds: $("#Conditions").val(),
+                }),
+                dataType: "json",
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    if (data) {
+                        window.location.replace("http://localhost:56892/Parcel?farmId=" + data.IdFarm);
+                    } else {
+
+                    }
+                },
+                error: function () {
+
+                }
+            });
+        }); 
+    });
+
+
+    function add() {
+        $DTable.row.add([
+            $("#DescriptionModalSummernote").code(),
+            "<span class='glyphicon glyphicon-trash'></span> <span> | </span> " +
+            "<span class='glyphicon glyphicon-edit'></span>"
+        ]).draw();
+
+    }
+
+    function edit() {
+        var dtIndex = $("#hiddenModalInput").val();
+        var Data = $DTable.row(dtIndex).data();
+        Data[0] = $("#DescriptionModalSummernote").code();
+        $DTable.row(dtIndex).data(Data).draw();
+
+    }
+
+    function ModalReset() {
+        $('#btnEdit').css('display', 'none');
+        $('#btnAdd').css('display', 'inline'); 
+        $("#DescriptionModalSummernote").code(""); 
+    }
+
+
+</script>
+
+@* Form *@
+<div class="form-horizontal">
+    <div class="form-group">
+        <label>Size</label>
+        <input type="number" id="Size" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>Description</label>
+        <textarea id="DescriptionSummernote" class="summernote"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label>Conditions</label>
+        <select id="Conditions" class="form-control" multiple></select>
+    </div>
+</div>
+@*DataTable*@
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Observations|
+                <span class="glyphicon glyphicon-folder-open" id="addObservation" data-toggle="modal" data-target="#myModal" />
+            </div>
+            <div class="panel-body">
+                <table class="table table-striped table-bordered table-hover" id="myDT">
+                    <thead>
+                        <tr>
+                            <th>
+                                <label>Description</label>
+                            </th>
+                            <th>
+                                <label>Buttons</label>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<button type="button" id="btnSave" class="btn">Save</button>
+
+@* Modal *@
+<div class="modal" id="myModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="myModalHeadAdd">Observations</h4>
+            </div>
+            <div id="myModalBody" class="modal-body">
+                <form id="myModalForm">
+                    <div class="form-group">
+                        <label>Description:</label>
+                        <textarea id="DescriptionModalSummernote" class="summernote"></textarea>
+                    </div>
+
+                    <input type="text" class="form-control" style="display:none" id="hiddenInput">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btnClose" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" id="btnAdd" class="btn btn-primary" onclick="add()" data-dismiss="modal">Add</button>
+                <button type="button" id="btnEdit" class="btn btn-primary" style="display:none" onclick="edit()" data-dismiss="modal">Edit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div>
+    <div class="modal fade" id="myDeleteModal" role="checkbox">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Delete Confirmation</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Sure you want to delete?</p>
+                    <input type="text" class="form-control" style="display:none" id="hiddenModalInput">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" id="deleteBtn" data-dismiss="modal">Delete</button>
+                    <button type="button" class="btn btn-default" id="cancelBtn" data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
