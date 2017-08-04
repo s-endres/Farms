@@ -58,6 +58,7 @@
             }
         });
 
+        $.ajaxSetup({ async: false })
         $.ajax({
             type: "GET",
             url: "http://localhost:56892/Plant/GetAllPlantsByParcelId",
@@ -73,7 +74,7 @@
                     for (var i = 0; i < data.length; i++) {
                         data[i].Buttons = "<span class='glyphicon glyphicon-remove-circle'>|</span><span class='glyphicon glyphicon-ok-circle'>";
                         $.get('http://localhost:56892/Plant/GetTypePlantById', { PlantTypeId: data[i].PlantType }, function (plantName) {
-                            console.log(plantName.Name);
+                            data[i].PlantName = plantName.Name;
                         });
                     }
                     $table = $('#myTable').DataTable({
@@ -84,7 +85,7 @@
                             { "data": "Name" },
                             { "data": "Description" },
                             { "data": "PlantedDate" },
-                            { "data": "PlantType" },
+                            { "data": "PlantName" },
                             { "data": "Buttons" }
                         ],
                         responsive: true,
@@ -131,6 +132,9 @@
                         if (!data) {
                             AddRemoveModal("Alert", "Error!", "myModal");
                         } else {
+                            $.get('http://localhost:56892/Plant/GetTypePlantById', { PlantTypeId: data.PlantType }, function (plantName) {
+                                data.PlantName = plantName.Name;
+                            });
                             data.Buttons = "<span class='glyphicon glyphicon-remove-circle'>|</span><span class='glyphicon glyphicon-ok-circle'>";
                             $("#myTable").DataTable().row.add(data).draw();
                             $("#myModal").modal("hide");
@@ -162,6 +166,9 @@
                         if (!data) {
                             AddRemoveModal("Alert", "Error!", "myModal");
                         } else {
+                            $.get('http://localhost:56892/Plant/GetTypePlantById', { PlantTypeId: data.PlantType }, function (plantName) {
+                                data.PlantName = plantName.Name;
+                            });
                             data.Buttons = "<span class='glyphicon glyphicon-remove-circle'>|</span><span class='glyphicon glyphicon-ok-circle'>";
                             $table.row($("#hidden").val()).data(data).draw();
                             $("#myModal").modal("hide");
