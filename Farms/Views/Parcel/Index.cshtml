@@ -29,6 +29,20 @@
             "columnDefs": [{ "targets": [0, 4], "orderable": false }]
         });
 
+        $summernote = $(".summernote").summernote({
+            height: 150,   //set editable area's height
+            codemirror: { // codemirror options
+                theme: 'monokai'
+            }
+        });
+
+         //<--Event jQuery -->
+
+        $("#createParcel").click(function () {
+
+            window.location.replace('http://localhost:56892/Parcel/Create?farmId=' + $.urlParam("farmId"));
+        })
+
         $.urlParam = function (name) {
             var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
             return results[1] || 0;
@@ -41,39 +55,142 @@
             dataType: "json",
             contentType: 'application/json; charset=utf-8',
             success: function (data) {
-                console.log(data.Name);
+
                 $("#h2Title").text("Parcel - " + data.Name);
-                //$.each(data, function () {
-
-                //    var array = [
-                //        "<td> <button type=\"button\" class=\"glyphicon glyphicon-plus\" onclick = \"ShowChild(this)\"></button> </td>",
-                //        this.Id,
-                //        this.Name,
-                //        this.Description,
-                //        "<button type=\"button\" data-toggle='modal' data-target='#DeleteModal' class=\"glyphicon glyphicon-trash\" onclick = \"removeRow(this)\"></button>" +
-                //        "<button type=\"button\" data-toggle='modal' data-target='#myModal' onclick =\"editRow(this)\" class = \"glyphicon glyphicon-pencil\"></button>" +
-                //        "<button type=\"button\" onclick =\"windowParcel(this)\" class = \"glyphicon glyphicon-eye-open\"> </button>"
-                //    ];
-                //    $table.row.add(array).draw();
-                //});
-
             },
 
         error: function () {
-            // ValidateMyAlert("Class='alert alert-danger'", 'error', 'Danger', "#alertContainer");
-            console.log("error");
+             ValidateMyAlert("Class='alert alert-danger'", 'error', 'Danger', "#alertContainer");
         }
 
         });
+
+
+        $.ajax({
+            type: "GET",
+            url: "http://localhost:56892/Parcel/GetAllParcelByFarmId",
+            data: { farmId: $.urlParam("farmId") },
+            dataType: "json",
+            contentType: 'application/json; charset=utf-8',
+            success: function (data) {
+
+                $.each(data, function () {
+                    var array = [
+                        "<td> <button type=\"button\" class=\"glyphicon glyphicon-plus\" onclick = \"ShowChild(this)\"></button> </td >",
+                        this.Id,
+                        this.Size,
+                        this.Description,
+                        "<button type=\"button\" data-toggle='modal' data-target='#DeleteModal' class=\"glyphicon glyphicon-trash\" onclick = \"removeRow(this)\"></button>" +
+                        "<button type=\"button\"  data-toggle='modal' data-target='#myModal' onclick =\"editRow(this)\" class = \"glyphicon glyphicon-pencil\"></button>" +
+                        "<button type=\"button\" onclick =\"windowPlant(this)\" class = \"glyphicon glyphicon-eye-open\"> </button>"
+                    ];
+                    $table.row.add(array).draw();
+                });
+            },
+
+            error: function () {
+                ValidateMyAlert("Class='alert alert-danger'", 'error', 'Danger', "#alertContainer");
+            }
+
+        });
+
+        $("#yesDelete").click(function () {
+            $.ajax({
+                type: "DELETE",
+                url: "http://localhost:56892/Parcel/RemoveParcel",
+                data: JSON.stringify({ parcelId: $("#HiddenIndexDelete").val() }),
+                dataType: "json",
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+
+                    if (data) {
+
+                        $table.row($("#indexId").val()).remove().draw();
+                        ValidateMyAlert("Class='alert alert-success'", ' Complete', 'Success', "#alertContainer")
+
+                    }
+
+                    else {
+                        ValidateMyAlert("Class='alert alert-warning'", ' Could not delete ', 'Warning', "#alertContainer")
+                    }
+
+                },
+
+                error: function () {
+                    ValidateMyAlert("Class='alert alert-danger'", 'error', 'Danger', "#alertContainer")
+                }
+
+            });
+
+            $("#closeDeleteModal").click();
+        })
         
     });
+
+
+    function removeRow(button) {
+
+        var actualRow = $(button).parents("tr");
+        var rowIndex = $table.row(actualRow).index();
+        var row = $table.row(rowIndex).data()
+        $("#HiddenIndexDelete").val(row[1]);
+        $("#indexId").val(rowIndex)
+    }
+
+
+    function editRow(button) {
+        var actualRow = $(button).parents("tr");
+        var rowIndex = $table.row(actualRow).index();
+        var row = $table.row(rowIndex).data()
+        window.location.replace('http://localhost:56892/Parcel/Edit?parcelId=' + row[1] + '&farmId=' + $.urlParam("farmId") );
+    }
+
+
+    function windowPlant(button) {
+        console.log("asd");
+        var actualRow = $(button).parents("tr");
+        var rowIndex = $table.row(actualRow).index();
+        var row = $table.row(rowIndex).data()
+        window.location.replace('http://localhost:56892/Plant?parcelId=' + row[1]);
+    }
+
+
+
+    //Validations
+    function ValidateMyAlert(pClass, pString, tMessege, insertSide) {
+
+        if (!$("p[" + pClass + "]").length) {
+            $("p[class='alert']").remove();
+            $(insertSide).prepend("<p " + pClass + "><strong>" + tMessege + "</strong> " + pString + " </p>");
+        }
+
+    }
+
+    function validateMyModal() {
+        var cellEmty = true;
+        if ($("#modalName").val().trim() == "" || $summernote.code() == "" || $summernote.code() == "<p><br></p>") {
+            $("#warningModal").css("display", "inline");
+            cellEmty = false;
+        }
+
+        else {
+            $("#warningModal").css("display", "none");
+            
+        }
+
+
+        return cellEmty;
+    }
+
+
 </script>
 
 <h2 id="h2Title">Parcel</h2>
 
+<div id="alertContainer"> </div>
 <div class="panel-heading">
     DataTable Advanced Table |
-    <button type="button" class="glyphicon glyphicon-plus" data-toggle="modal" data-target="#myModal"></button>
+    <button type="button" class="glyphicon glyphicon-plus" id="createParcel"></button>
 </div>
 <table id="myDT" class="table">
     <thead>
@@ -97,3 +214,25 @@
     </thead>
     <tbody></tbody>
 </table>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="DeleteModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="titleModelDelete">Delete</h4>
+            </div>
+            <div id="rowModalBody" class="modal-body">
+                <label for="usr">Are you sure you want to delete a row</label><br>
+                <button type="button" class="btn btn-default" id="yesDelete">yes</button>
+                <button type="button" class="btn btn-default" id="noDelete" data-dismiss="modal">No</button>
+                <input type="text" id="HiddenIndexDelete" style="display:none"> </input>
+                <input type="text" id="indexId" style="display:none"> </input>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="closeDeleteModal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
