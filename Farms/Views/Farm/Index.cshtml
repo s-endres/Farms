@@ -46,7 +46,7 @@
                     for (var i = 0; i < pData.length; i++) {
                         
                         pData[i].ShowMore = "<span class='glyphicon glyphicon-download' class='Shown'>";
-                        pData[i].Buttons = "<span class='glyphicon glyphicon-remove-circle'> |</span>" + "<span class='glyphicon glyphicon-ok-circle'></span>";
+                        pData[i].Buttons = "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span> |" + " <span class='glyphicon glyphicon-unchecked'></span>";
                     }
                     $Table = $("#MainTable").DataTable({ //Identa mejor tu codigo
                         "processing": true,
@@ -75,6 +75,8 @@
                     WarningMessage();
                 }
             });//Close AJAX GET
+
+            
             $("#EditRow").click(function () {
 
 
@@ -83,7 +85,7 @@
                     Id: $("#Id").val(),
                     Name: $("#Name").val(),
                     Description: $SummerNote.code(),
-                    Buttons: "<span class='glyphicon glyphicon-remove-circle'> | </span>" + "<span class='glyphicon glyphicon-ok-circle'></span>"
+                    Buttons: "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span> |" + " <span class='glyphicon glyphicon-unchecked'></span>"
                 };
                 $.ajax({
                     type: "PUT",
@@ -116,7 +118,7 @@
                         ShowMore: "<span class='glyphicon glyphicon-download' class='Shown'>",
                         Name: $("#Name").val(),
                         Description: $SummerNote.code(),
-                        Buttons: "<span class='glyphicon glyphicon-remove-circle'> |</span>" + "<span class='glyphicon glyphicon-ok-circle'></span>"
+                        Buttons: "<span class='glyphicon glyphicon-remove-circle'></span> |"+ " <span class='glyphicon glyphicon-ok-circle'></span> |"+" <span class='glyphicon glyphicon-unchecked'></span>"
                     }),
                     dataType: "json",
                     contentType: 'application/json; charset=utf-8',
@@ -126,7 +128,7 @@
                             Id: pData.Id,
                             Name: $("#Name").val(),
                             Description:$SummerNote.code(),
-                            Buttons: "<span class='glyphicon glyphicon-remove-circle'> | </span>" + "<span class='glyphicon glyphicon-ok-circle'></span>"
+                            Buttons: "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span> |" + " <span class='glyphicon glyphicon-unchecked'></span>"
                         }
                         //console.log(pData);
                         //console.log(ObjPostData);
@@ -204,6 +206,58 @@
             $("#NoDelete").click(function () {
                 $("#myDeleteModal").modal("hide");
             });//Confirmation Modal
+
+            $("tbody").on("click", ".glyphicon-unchecked", function () {
+                var Row = $(this).parents("tr");
+                IdVal = $Table.row(Row).data().Id;
+                window.location.replace("http://localhost:56892/Parcel?farmId="+IdVal);
+            });
+
+            //$("#MainTable tbody").on("click", ".glyphicon-download,.glyphicon-upload", function () {
+            //    var RClass = "glyphicon-download";
+            //    var AClass = "glyphicon-upload";
+
+            //    var Tr = $(this).closest("tr");/**HTML Row**/
+            //    var row = $Table.row(Tr);/**DataTable Row**/
+            //    var Index = $Table
+            //        .row(row)
+            //        .index();
+
+            //    if (row.child.isShown()) {
+            //        ShowLogo(this, AClass, RClass);
+            //        row.child.hide();
+            //        Tr.removeClass('shown');
+
+            //    }
+            //    else {
+            //        $.ajax({
+            //            type: "GET",
+            //            url: "http://localhost:56892/Farm/RemoveFarm",
+            //            data: { BookId: $Table.row(Index).data()[1] },
+            //            dataType: "json",
+            //            contentType: 'application/json; charset=utf-8',
+            //            success: function (data) {
+            //                console.log(row.child(Format(data)));
+            //                if (!data) {
+            //                    alert("Puto el que lo lea");
+
+
+            //                }
+            //                else {
+
+            //                    row.child(Format(data)).show();
+            //                    Tr.addClass('shown');
+
+            //                }/**Sends the datatable row data to the Format method and show it**/
+
+            //            },
+            //            error: function () {
+            //                alert("");
+            //            }
+            //        });//Close GET Authors Ajax
+            //        ShowLogo(this, RClass, AClass);
+            //    }
+            //});//Close the subtable function
         });//Close Document Ready
 
 /*********************************************FUNCTIONS AREA**********************************************/
@@ -215,16 +269,33 @@
             $("#Id").css("display", "none");
             $(".modal-content .form-control").not(".hidden").not(".hidden2").val("");
             $SummerNote.code("");
-        }
+        }//Opens the modal
         function CloseModal()
         {
             $("#myModal").modal("hide");
-        }
+        }//Closes the modal
         function WarningMessage() {
             if (!$('div[class="alert-danger"]').length) {
                 $("#myDT").prepend('<div class="alert alert-danger">< strong > Omaiga!</strong >Something went wrong >:O</div >');
             }
         }//Close Warning Message function
+
+        function Format(Data) {
+
+            var Table = "<table><thead><tr><th>Parcel:</th><th>Second Name</th><th>Plant Count</th></tr></thead><tbody>";
+            $.each(Data, function (index, obj) {
+
+                Table += "<tr><td>" + obj.Parcel + "</td>" + "<td>" + obj.PlantCount + "</td>" + "</tr>";
+
+            });
+            return Table + "</tbody>" + "</table>";
+        }//Adds a format to the sent data
+
+        function ShowLogo(pSelector, pRClass, pAClass) {
+            $(pSelector).removeClass(pRClass);
+            $(pSelector).addClass(pAClass);
+        }//Swaps the icon of the show more row
+
     </script>
     <style>
         #hidden {
