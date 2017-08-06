@@ -80,7 +80,7 @@
             $("#hiddenModalInput").val($DTable.row(RowHTML).index());
         });
 
-        $('#deleteBtn').on('click', function () { 
+        $('#deleteBtn').on('click', function () {
             var rtIndex = $("#hiddenModalInput").val();
             var dtData = $DTable.row(rtIndex).data();
 
@@ -95,7 +95,7 @@
                 success: function (data) {
                     if (data) {
                         $DTable.row(rtIndex).remove().draw();
-                    } 
+                    }
                 },
                 error: function () {
 
@@ -108,9 +108,9 @@
             var RowHTML = $(this).parents('tr');
             var dtIndex = $DTable.row(RowHTML).index();
             var data = $DTable.row(dtIndex).data(); 
-            console.log(data);
             $('#btnEdit').css('display', 'inline');
-            $('#btnAdd').css('display', 'none');
+            $('#btnAdd').css('display', 'none'); 
+            $("#Id").parent().show();
             $("#Id").text(data.Id);
             $("#Name").val(data.Name);
             $summernote.code(data.Description);
@@ -118,8 +118,43 @@
             $("#PlantType").val(data.PlantType);
             $("#hiddenModalInput").val(dtIndex);
         });
-    });
 
+        $('.glyphicon').hover(function () {
+            $(this).css('cursor', 'pointer');
+        });
+    });//Doc Ready
+    function validateMyModal() {
+        var flag = true;
+        $('#Name, #myModal input[type="date"]').each(function () {
+            if ($(this).val().trim() == "") {
+                flag = false;
+                $(this).parent().removeClass("has-success").addClass("has-error");
+            } else {
+                $(this).parent().removeClass("has-error").addClass("has-success");
+            }
+        }) 
+
+        if ($("#PlantType").val() == null) {
+            flag = false;
+            if (!$('.alert-danger').length) {
+                $(".modal").append("<div class='alert alert-danger'><strong>Does not meet requirements. </strong>Plant Type is required.</div>");
+            } else {
+                $('.alert-danger').remove();
+                $(".modal").append("<div class='alert alert-danger'><strong>Does not meet requirements. </strong>Plant Type is required.</div>");
+            }
+        }
+
+        if ($summernote.code() == "") {
+            flag = false;
+            if (!$('.alert-danger').length) {
+                $(".modal").append("<div class='alert alert-danger'><strong>Does not meet requirements. </strong>Description is required.</div>");
+            } else {
+                $('.alert-danger').remove();
+                $(".modal").append("<div class='alert alert-danger'><strong>Does not meet requirements. </strong>Description is required.</div>");
+            }
+        } 
+        return flag;
+    }
     function setDataTable(Data) {
         $DTable = $('#myDT').DataTable({
             "processing": true,
@@ -149,7 +184,8 @@
         $summernote.code("");
         $("#PlantedDate").val("");
         $("#PlantType").val("");
-        $("#Id").text("");
+        $("#Id").parent().hide();
+        $('.alert-danger').remove();
 
         $("#myModalForm div input[type='text']").each(function () {
             $(this).parent("div").removeClass("has-error");
@@ -157,37 +193,39 @@
     }
 
     function add() {
-        $.ajax({
-            type: "POST",
-            url: "http://localhost:56892/Plant/AddPlant",
-            data: JSON.stringify({
-                Name: $("#Name").val(),
-                Description: $summernote.code(),
-                PlantedDate: $("#PlantedDate").val(),
-                IdParcel: $.urlParam('parcelId'),
-                PlantType: $("#PlantType").val()
-            }),
-            dataType: "json",
-            contentType: 'application/json; charset=utf-8',
-            success: function (data) {
-                if (data) {
-                    $.ajaxSetup({ async: false });
-                    $.get('http://localhost:56892/Plant/GetTypePlantById?plantTypeId=' + data.PlantType, function (dataType) {
-                        data.PlantName = dataType.Name;
-                    });
-                    $DTable.row.add(data).draw();
-                } else {
-
+        if (validateMyModal()) {
+            $.ajax({
+                type: "POST",
+                url: "http://localhost:56892/Plant/AddPlant",
+                data: JSON.stringify({
+                    Name: $("#Name").val(),
+                    Description: $summernote.code(),
+                    PlantedDate: $("#PlantedDate").val(),
+                    IdParcel: $.urlParam('parcelId'),
+                    PlantType: $("#PlantType").val()
+                }),
+                dataType: "json",
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    if (data) {
+                        $("#myModal").modal('toggle');
+                        $.ajaxSetup({ async: false });
+                        $.get('http://localhost:56892/Plant/GetTypePlantById?plantTypeId=' + data.PlantType, function (dataType) {
+                            data.PlantName = dataType.Name;
+                        });
+                        $DTable.row.add(data).draw();
+                    }
+                },
+                error: function () { 
                 }
-            },
-            error: function () {
+            });
+        }
 
-            }
-        });
     }
 
 
-     function edit() {
+    function edit() {
+        if (validateMyModal()) {
             $.ajax({
                 type: "PUT",
                 url: "http://localhost:56892/Plant/UpdatePlant",
@@ -203,22 +241,21 @@
                 contentType: 'application/json; charset=utf-8',
                 success: function (data) {
                     if (data) {
+                        $("#myModal").modal('toggle');
                         var dtIndex = $("#hiddenModalInput").val();
                         $.ajaxSetup({ async: false });
                         $.get('http://localhost:56892/Plant/GetTypePlantById?plantTypeId=' + data.PlantType, function (dataType) {
                             data.PlantName = dataType.Name;
                         });
-                        $DTable.row(dtIndex).data(data).draw(); 
-                    } else {
-
+                        $DTable.row(dtIndex).data(data).draw();
                     }
                 },
-                error: function () { 
+                error: function () {
                 }
             });
-        }
-
-
+        } 
+    }
+     
 </script>
 <h2 id="PlantsHeader"></h2>
 
@@ -259,7 +296,7 @@
             </div>
         </div>
     </div>
-</div> 
+</div>
 
 @*Modal*@
 <div class="modal" id="myModal">
@@ -295,8 +332,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" id="btnClose" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" id="btnAdd" class="btn btn-primary" onclick="add()" data-dismiss="modal">Add</button>
-                <button type="button" id="btnEdit" class="btn btn-primary" style="display:none" onclick="edit()" data-dismiss="modal">Edit</button>
+                <button type="button" id="btnAdd" class="btn btn-primary" onclick="add()">Add</button>
+                <button type="button" id="btnEdit" class="btn btn-primary" style="display:none" onclick="edit()">Edit</button>
             </div>
         </div>
     </div>

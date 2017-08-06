@@ -3,7 +3,7 @@
     ViewBag.Title = "Edit";
 }
 
- 
+
 <!-- DataTables JavaScript -->
 <script src="/bower_components/datatables/media/js/jquery.dataTables.min.js"></script>
 <script src="/bower_components/datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.min.js"></script>
@@ -32,11 +32,11 @@
             $("#Size").val(data.Size);
             $summernote.code(data.Description);
             $("#FarmId").val(data.IdFarm);
-            $("#Conditions").val(data.ConditionIds).trigger("change"), 
-            $.each(data.Observations, function () {
-                $DTable.row.add([this.Description, "<span class='glyphicon glyphicon-trash'></span> <span> | </span> " +
-                    "<span class='glyphicon glyphicon-edit'></span>"]).draw();
-            });
+            $("#Conditions").val(data.ConditionIds).trigger("change"),
+                $.each(data.Observations, function () {
+                    $DTable.row.add([this.Description, "<span class='glyphicon glyphicon-trash'></span> <span> | </span> " +
+                        "<span class='glyphicon glyphicon-edit'></span>"]).draw();
+                });
 
         });
 
@@ -67,11 +67,12 @@
             var RowHTML = $("#hiddenModalInput").val();
             $DTable.row(RowHTML).remove().draw();
         });
-
-        $('#myModal').on('hidden.bs.modal', function () {
+        
+        $(document).on('click', '.glyphicon-folder-open', function () {
             ModalReset();
+            $("#myModal").modal();
         });
-
+        
         $('#myDT tbody').on('click', '.glyphicon-edit', function () {
             $("#myModal").modal();
             $('#btnEdit').css('display', 'inline');
@@ -83,43 +84,113 @@
         });
 
         $("#btnSave").click(function () {
+            if (validateMyForm() && validateMyDTable()) {
+                var observations = []
+                $($DTable.rows().data()).each(function (index, row) {
+                    var Observation = {
+                        id: index,
+                        Description: row[0]
+                    }
+                    observations.push(Observation);
+                });
 
-            var observations = []
-            $($DTable.rows().data()).each(function (index, row) {
-                var Observation = {
-                    id: index,
-                    Description: row[0]
-                }
-                observations.push(Observation);
-            });
+                $.ajax({
+                    type: "PUT",
+                    url: "http://localhost:56892/Parcel/UpdateParcel",
+                    data: JSON.stringify({
+                        Id: $.urlParam('parcelId'),
+                        Size: $("#Size").val(),
+                        Description: $summernote.code(),
+                        IdFarm: $("#FarmId").val(),
+                        Observations: observations,
+                        ConditionIds: $("#Conditions").val(),
+                    }),
+                    dataType: "json",
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (data) {
+                        if (data) {
+                            window.location.replace("http://localhost:56892/Parcel?farmId=" + data.IdFarm);
+                        } else {
 
-            $.ajax({
-                type: "PUT",
-                url: "http://localhost:56892/Parcel/UpdateParcel",
-                data: JSON.stringify({
-                    Id: $.urlParam('parcelId'),
-                    Size: $("#Size").val(),
-                    Description: $summernote.code(),
-                    IdFarm: $("#FarmId").val(),
-                    Observations: observations,
-                    ConditionIds: $("#Conditions").val(),
-                }),
-                dataType: "json",
-                contentType: 'application/json; charset=utf-8',
-                success: function (data) {
-                    if (data) {
-                        window.location.replace("http://localhost:56892/Parcel?farmId=" + data.IdFarm);
-                    } else {
+                        }
+                    },
+                    error: function () {
 
                     }
-                },
-                error: function () {
+                });
+            }
+        });
+        $('.glyphicon').hover(function () {
+            $(this).css('cursor', 'pointer');
+        });
+    });//Doc Ready
 
-                }
-            });
-        }); 
-    });
+    function SwapClass(ThisText, ClassR, ClassA) {
+        $(ThisText).removeClass(ClassR);
+        $(ThisText).addClass(ClassA);
+    }
+    function validateMyForm() {
+        var flag = true;
+        //form inputs
+        $(".single-line").each(function () {
+            if ($(this).val().trim() == "") {
+                SwapClass($(this).parent(), "has-success", "has-error");
+                flag = false;
+            } else {
+                SwapClass($(this).parent(), "has-error", "has-success");
+            }
 
+        })
+        //numeric input
+        $(".form-horizontal div input[type='number']").each(function () {
+            if ($(this).val().trim() == "" || $(this).val() <= 0) {
+                SwapClass($(this).parent(), "has-success", "has-error");
+                flag = false;
+
+            } else {
+                SwapClass($(this).parent(), "has-error", "has-success");
+            }
+        });
+
+        //WYSWYG input
+        if ($summernote.code() == "") {
+            flag = false;
+            if (!$('.alert-danger').length) {
+                $(".form-horizontal").append("<div class='alert alert-danger'><strong>Does not meet requirements. </strong>Description is required.</div>");
+            } else {
+                $('.alert-danger').remove();
+                $(".form-horizontal").append("<div class='alert alert-danger'><strong>Does not meet requirements. </strong>Description is required.</div>");
+            }
+        } else {
+            $('.alert-danger').remove();
+        }
+        //Genre selector
+        if ($("#Conditions").val() == null) {
+            flag = false;
+            if (!$('.alert-danger').length) {
+                $(".form-horizontal").append("<div class='alert alert-danger'><strong>Does not meet requirements. </strong>Genre is required.</div>");
+            } else {
+                $('.alert-danger').remove();
+                $(".form-horizontal").append("<div class='alert alert-danger'><strong>Does not meet requirements. </strong>Genre is required.</div>");
+            }
+        }
+        return flag;
+    }
+
+    function validateMyDTable() {
+        var flag = true;
+
+        if ($DTable.data().length <= 0) {
+            if (!$('.alert-danger').length) {
+                $(".form-horizontal").append("<div class='alert alert-danger'><strong>Does not meet requirements. </strong>Observation required.</div>");
+            } else {
+                $('.alert-danger').remove();
+                $(".form-horizontal").append("<div class='alert alert-danger'><strong>Does not meet requirements. </strong>Observation required.</div>");
+            }
+            flag = false;
+        }
+        return flag;
+    }
 
     function add() {
         $DTable.row.add([
@@ -140,8 +211,8 @@
 
     function ModalReset() {
         $('#btnEdit').css('display', 'none');
-        $('#btnAdd').css('display', 'inline'); 
-        $("#DescriptionModalSummernote").code(""); 
+        $('#btnAdd').css('display', 'inline');
+        $("#DescriptionModalSummernote").code("");
     }
 
 
@@ -170,7 +241,7 @@
         <div class="panel panel-default">
             <div class="panel-heading">
                 Observations|
-                <span class="glyphicon glyphicon-folder-open" id="addObservation" data-toggle="modal" data-target="#myModal" />
+                <span class="glyphicon glyphicon-folder-open" id="addObservation" data-target="#myModal" />
             </div>
             <div class="panel-body">
                 <table class="table table-striped table-bordered table-hover" id="myDT">

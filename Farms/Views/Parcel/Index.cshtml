@@ -82,8 +82,11 @@
             window.location.replace("http://localhost:56892/Plant?parcelId=" + rowData.Id);
         });
 
+        $('.glyphicon').hover(function () {
+            $(this).css('cursor', 'pointer');
+        });
 
-    });
+    });//Doc Ready
 
     function edit() {
         $.ajax({

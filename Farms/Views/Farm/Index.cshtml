@@ -18,7 +18,7 @@
 
 <script>
     $(document).ready(function () {
-        
+
         $summernote = $(".summernote").summernote({
             height: 100
         });
@@ -60,7 +60,7 @@
         $(document).on('click', '.glyphicon-folder-open', function () {
             $("#myModal").modal();
         });
-         
+
         $('#myDT tbody').on('click', '.glyphicon-edit', function () {
             $("#myModal").modal();
             $("#Id").parent().show();
@@ -73,10 +73,10 @@
             $("#NameInput").val(Data.Name);
             $summernote.code(Data.Description);
         });
-
+        ModalReset();
         $('#myModal').on('hidden.bs.modal', function () {
-                ModalReset();
-            });
+            ModalReset();
+        });
 
         $('#myDT tbody').on('click', '.glyphicon-eye-open', function () {
             var dtIndex = $DTable.row($(this).parents('tr')).index();
@@ -103,7 +103,33 @@
             }
         });
 
-    });
+        $('.glyphicon').hover(function () {
+            $(this).css('cursor', 'pointer');
+        });  
+    });//Doc Ready
+
+    function validateMyModalForm() {
+        var flag = true;
+         
+        if ($("#NameInput").val().trim() == "") {
+            $("#NameInput").parent().addClass("has-error").removeClass("has-success");
+            flag = false;
+        } else {
+            $(this).parent().addClass("has-success").removeClass("has-error");
+        }
+        if ($summernote.code() == "") {
+            flag = false;
+            if (!$('.alert-danger').length) {
+                $(".modal").append("<div class='alert alert-danger'><strong>Does not meet requirements. </strong>Description is required.</div>");
+            } else {
+                $('.alert-danger').remove();
+                $(".modal").append("<div class='alert alert-danger'><strong>Does not meet requirements. </strong>Description is required.</div>");
+            }
+        } else {
+            $('.alert-danger').remove();
+        }
+        return flag;
+    }
 
     function SwapIcon(pSelector, pRClass, pAClass) {
         $(pSelector).addClass(pAClass);
@@ -138,58 +164,66 @@
     }
 
     function edit() {
-        $.ajax({
-            type: "PUT",
-            url: "http://localhost:56892/Farm/UpdateFarm",
-            data: JSON.stringify({
-                Id: $("#Id").text(),
-                Name: $("#NameInput").val(),
-                Description: $summernote.code(),
-            }),
-            dataType: "json",
-            contentType: 'application/json; charset=utf-8',
-            success: function (Data) {
-                if (Data) {
+        if (validateMyModalForm()) {
+            $.ajax({
+                type: "PUT",
+                url: "http://localhost:56892/Farm/UpdateFarm",
+                data: JSON.stringify({
+                    Id: $("#Id").text(),
+                    Name: $("#NameInput").val(),
+                    Description: $summernote.code(),
+                }),
+                dataType: "json",
+                contentType: 'application/json; charset=utf-8',
+                success: function (Data) {
+                    if (Data) {
 
-                    var dtIndex = $("#hiddenModalInput").val();
-                    $DTable.row(dtIndex).data(Data).draw();
-                } else {
+                        var dtIndex = $("#hiddenModalInput").val();
+                        $DTable.row(dtIndex).data(Data).draw();
+                    } else {
+                    }
+                },
+                error: function () {
                 }
-            },
-            error: function () {
-            }
-        });
+            });
+            $("#myModal").modal('toggle');
+        }
     }
 
     function add() {
-        $.ajax({
-            type: "POST",
-            url: "http://localhost:56892/Farm/AddFarm",
-            data: JSON.stringify({
-                Name: $("#NameInput").val(),
-                Description: $summernote.code()
-            }),
-            dataType: "json",
-            contentType: 'application/json; charset=utf-8',
-            success: function (data) {
-                if (data) {
-                    $DTable.row.add(data).draw();
-                } else {
+        if (validateMyModalForm()) {
+            $.ajax({
+                type: "POST",
+                url: "http://localhost:56892/Farm/AddFarm",
+                data: JSON.stringify({
+                    Name: $("#NameInput").val(),
+                    Description: $summernote.code()
+                }),
+                dataType: "json",
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    if (data) {
+                        $DTable.row.add(data).draw();
+                    } else {
+
+                    }
+                },
+                error: function () {
 
                 }
-            },
-            error: function () {
-
-            }
-        });
+            });
+            $("#myModal").modal('toggle');
+        }
     }
 
     function ModalReset() {
         $('#btnEdit').css('display', 'none');
         $('#btnAdd').css('display', 'inline');
         $("#myModalForm div input[type='text']").val("");
+        $summernote.code("");
         $("#myModalForm div input[type='text']").each(function () {
             $(this).parent("div").removeClass("has-error");
+            $(this).parent("div").removeClass("has-success");
         });
         $("#Id").parent().hide();
     }
@@ -259,8 +293,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" id="btnClose" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" id="btnAdd" class="btn btn-primary" onclick="add()" data-dismiss="modal">Add Farm</button>
-                <button type="button" id="btnEdit" class="btn btn-primary" style="display:none" onclick="edit()" data-dismiss="modal">Edit</button>
+                <button type="button" id="btnAdd" class="btn btn-primary" onclick="add()">Add Farm</button>
+                <button type="button" id="btnEdit" class="btn btn-primary" style="display:none" onclick="edit()">Edit</button>
             </div>
         </div>
     </div>
