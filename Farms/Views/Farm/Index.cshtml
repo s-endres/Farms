@@ -48,7 +48,7 @@
                         pData[i].ShowMore = "<span class='glyphicon glyphicon-download' class='Shown'>";
                         pData[i].Buttons = "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span> |" + " <span class='glyphicon glyphicon-unchecked'></span>";
                     }
-                    $Table = $("#MainTable").DataTable({ //Identa mejor tu codigo
+                    $Table = $("#MainTable").DataTable({
                         "processing": true,
                         "data": pData,
                         "columns": [
@@ -141,7 +141,7 @@
                     error: function () {
 
                     }
-                });//Close AJAX GET
+                });//Close AJAX POST
             });//Close Add function
 
             $("tbody").on("click", ".glyphicon-ok-circle", function () {

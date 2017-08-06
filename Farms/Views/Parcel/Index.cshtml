@@ -27,6 +27,7 @@
 <body>
     <script>
         $("document").ready(function () {
+            
          
             $SummerNote = $("#Summernote").summernote({
                 height: 125,
@@ -58,6 +59,7 @@
             }
             var FarmObject = { farmId: $.urlParam("farmId") };
             console.log(FarmObject);
+
             $.ajax({
                 type: "GET",
                 url: "http://localhost:56892/Parcel/GetAllParcelByFarmId",
@@ -103,52 +105,15 @@
    
 
             $("tbody").on("click", ".glyphicon-ok-circle", function () {
-                $("#myModal").modal();
-                $("#AddParcel").css("display", "none");
-                $("#EditRow").css("display", "inline");
+                    var Row = $(this).parents("tr");
+                    IdVal = $Table.row(Row).data().Id;
+                    window.location.replace("http://localhost:56892/Parcel/Edit?parcelId=" + IdVal);
+            });//redirects to the edit view
 
-                var Row = $(this).parents("tr");
-                var Index = $Table.row(Row).index();
-                var Data = $Table.row(Index).data();
-              
-                $("#Id").val(Data.Id);
-                $("#Size").val(Data.Size);
-                $SummerNote.code(Data.Description);
-                $("#hidden").val(Index);
+            $("#AddParcelButton").click(function () {
+                window.location.replace("http://localhost:56892/Parcel/Create?farmId=" + $.urlParam("farmId"));
 
-            });//Opens the edit Modal
-
-            $("#EditRow").click(function () {
-
-
-                ObjEdit = {
-                    ShowMore: "<span class='glyphicon glyphicon-download' class='Shown'>",
-                    Id: $("#Id").val(),
-                    Size: $("#Size").val(),
-                    Description: $SummerNote.code(),
-                    Buttons: "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span> |" + " <span class='glyphicon glyphicon-unchecked'></span>"
-                };
-                $.ajax({
-                    type: "PUT",
-                    url: "http://localhost:56892/Parcel/UpdateParcel",
-                    data: JSON.stringify(ObjEdit),
-                    dataType: "json",
-                    contentType: 'application/json; charset=utf-8',
-                    success: function (pData) {
-                        $Table
-                          .row($("#hidden").val())
-                          .data(ObjEdit)
-                          .draw();
-                        CloseModal();
-
-
-                    },
-                    error: function () {
-                        console.log("Jaja Salu2");
-                        WarningMessage();
-                    }
-                });//Close AJAX PUT For Edit
-            });//Edit Funcction
+            });
 
         });//Close Document Ready
 
