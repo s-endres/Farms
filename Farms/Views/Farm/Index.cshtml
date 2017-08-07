@@ -87,30 +87,78 @@
         $('#myDT tbody').on('click', '.glyphicon-plus-sign, .glyphicon-minus-sign', function () {
             var tr = $(this).parents('tr');
             var row = $DTable.row(tr);
+            var rowData = $DTable.row(row.index()).data();
             var FirstClass = 'glyphicon-plus-sign';
             var SecondClass = 'glyphicon-minus-sign';
             if (row.child.isShown()) {
                 row.child.hide();
                 tr.removeClass('shown');
                 SwapIcon(this, SecondClass, FirstClass);
+            }
+            else {
+                $.ajaxSetup({ async: false })
+                $.ajax({
+                    type: "GET",
+                    url: "http://localhost:56892/Parcel/GetAllParcelByFarmId",
+                    dataType: "json",
+                    contentType: 'application/json; charset=utf-8',
+                    data: { farmId: row.data().Id },
+                    success: function (data) {
+                        if (data.length > 0) {
+                            var DataArray = [];
+                            for (var i = 0; i < data.length; i++) {
+                                var Id = data[i].Id;
+                                var Object = {
+                                    Parcel: data[i].Description
+                                }
+                                $.get('http://localhost:56892/Plant/GetAllPlantsByParcelId', { parcelId: Id }, function (plantData) {
+                                    Object.Count = plantData.length;
+                                });
+                                DataArray.push(Object);
+                            }
+                            row.child(format(DataArray)).show();
+                        } else {
+                            row.child(emptyFormat()).show();
+                        }
+                    },
+                    error: function () {
 
-            } else {
+                    }
+                });
                 SwapIcon(this, FirstClass, SecondClass);
-                setDropTable(row);
-                //row.child(format(Data)).show();
-                row.child(format(row.data().Authors)).show(); //-llamando directamente del objecto-/////////////////////////////////////////////////////////////////////////////////////////////
+                row.child.show();
                 tr.addClass('shown');
             }
         });
 
         $('.glyphicon').hover(function () {
             $(this).css('cursor', 'pointer');
-        });  
+        });
     });//Doc Ready
+
+    function emptyFormat() {
+        return "Has no Parcels"
+    }
+
+    function format(datarow) {
+        var TRs = "";
+        for (var i = 0; i < datarow.length; i++) {
+            TRs += '<tr><td>' + datarow[i].Parcel + '</td><td>' + datarow[i].Count + '</td></tr>';
+        }
+        return "<table>" +
+            "<thead>" +
+            "<tr>" +
+            "<th> Parcel  </th >" +
+            "<th> Count </th >" +
+            "</tr>" +
+            "</thead>" +
+            "<tbody>" + TRs + "</tbody>" +
+            "</table>";
+    }
 
     function validateMyModalForm() {
         var flag = true;
-         
+
         if ($("#NameInput").val().trim() == "") {
             $("#NameInput").parent().addClass("has-error").removeClass("has-success");
             flag = false;
@@ -225,6 +273,7 @@
             $(this).parent("div").removeClass("has-error");
             $(this).parent("div").removeClass("has-success");
         });
+        $('.alert-danger').remove();
         $("#Id").parent().hide();
     }
 

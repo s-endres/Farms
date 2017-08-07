@@ -118,11 +118,9 @@
             $("#PlantType").val(data.PlantType);
             $("#hiddenModalInput").val(dtIndex);
         });
-
-        $('.glyphicon').hover(function () {
-            $(this).css('cursor', 'pointer');
-        });
+        
     });//Doc Ready
+     
     function validateMyModal() {
         var flag = true;
         $('#Name, #myModal input[type="date"]').each(function () {
@@ -142,6 +140,8 @@
                 $('.alert-danger').remove();
                 $(".modal").append("<div class='alert alert-danger'><strong>Does not meet requirements. </strong>Plant Type is required.</div>");
             }
+        } else {
+            $('.alert-danger').remove();
         }
 
         if ($summernote.code() == "") {

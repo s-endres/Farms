@@ -45,13 +45,7 @@
             var data = $DTable.row(dtIndex).data();
             window.location.replace("http://localhost:56892/Parcel/Edit?parcelId=" + data.Id); 
         });
-
-        $('#myDT tbody').on('click', '.glyphicon-trash', function () {
-            $("#myDeleteModal").modal();
-            var RowHTML = $(this).parents('tr');
-            $("#hiddenModalInput").val($DTable.row(RowHTML).index());
-        });
-
+        
         $('#deleteBtn').on('click', function () {
             var RowHTML = $("#hiddenModalInput").val();
 
@@ -66,12 +60,9 @@
                 success: function (data) {
                     if (data) {
                         $DTable.row(RowHTML).remove().draw();
-                    } else {
-                        alert();
                     }
                 },
                 error: function () {
-                    alert();
                 }
             });
         });
@@ -86,8 +77,62 @@
             $(this).css('cursor', 'pointer');
         });
 
+        $(document).on('click', '.glyphicon-plus-sign, .glyphicon-minus-sign', function () {
+            var tr = $(this).parents('tr');
+            var row = $DTable.row(tr);
+            var FirstClass = 'glyphicon-plus-sign';
+            var SecondClass = 'glyphicon-minus-sign';
+            if (row.child.isShown()) {
+                row.child.hide();
+                tr.removeClass('shown');
+                SwapIcon(this, SecondClass, FirstClass);
+            } else {
+                //$.ajaxSetup({ async: false })
+                $.ajax({
+                    type: "GET",
+                    url: "http://localhost:56892/Plant/GetParcelByTypeAndCount",
+                    dataType: "json",
+                    contentType: 'application/json; charset=utf-8',
+                    data: {
+                        parcelId: row.data().Id
+                    },
+                    success: function (data) {
+                        if (data.length > 0) {
+                            row.child(format(data)).show();
+                        } else {
+                            row.child(emptyFormat()).show();
+                        }
+                    },
+                    error: function () {
+
+                    }
+                });
+                SwapIcon(this, FirstClass, SecondClass);
+                row.child.show();
+                tr.addClass('shown');
+            }
+        });
+        
     });//Doc Ready
 
+    function format(datarow) {
+        var TRs = "";
+        for (var i = 0; i < datarow.length; i++) {
+            TRs += '<tr><td>' + datarow[i].type + '</td><td>' + datarow[i].count + '</td></tr>';
+        }
+        return "<table>" +
+            "<thead>" +
+            "<tr>" +
+            "<th> Type </th >" +
+            "<th> Count </th >" +
+            "</tr>" +
+            "</thead>" +
+            "<tbody>" + TRs + "</tbody>" +
+            "</table>";
+    }
+    function emptyFormat() {
+        return "Has no Plants"
+    }
     function edit() {
         $.ajax({
             type: "PUT",
@@ -103,7 +148,6 @@
                 if (Data) {
 
                     var dtIndex = $("#hiddenModalInput").val();
-                    console.log(dtIndex);
                     $DTable.row(dtIndex).data(Data).draw();
                 } else {
                 }
@@ -132,6 +176,11 @@
                 }
             ]
         });
+    }
+
+    function SwapIcon(pSelector, pRClass, pAClass) {
+        $(pSelector).addClass(pAClass);
+        $(pSelector).removeClass(pRClass);
     }
 
 

@@ -35,7 +35,7 @@
         $summernote = $(".summernote").summernote({
             height: 100
         });
-
+        $summernote.code("");
         $("#Conditions").select2({
             placeholder: "Select a condition"
         });
@@ -119,16 +119,7 @@
 
     function validateMyForm() {
         var flag = true;
-        //form inputs
-        $(".single-line").each(function () {
-            if ($(this).val().trim() == "") {
-                SwapClass($(this).parent(), "has-success", "has-error");
-                flag = false;
-            } else {
-                SwapClass($(this).parent(), "has-error", "has-success");
-            }
-
-        })
+      
         //numeric input
         $(".form-horizontal div input[type='number']").each(function () {
             if ($(this).val().trim() == "" || $(this).val() <= 0) {
