@@ -225,8 +225,8 @@
             });
         }
         else {
-            console.log($summernote.code());
-            ValidateMyAlert("Class='alert alert-warning'", 'empty slot Or wrong', 'Warning', "#alertContainer") }
+
+            ValidateMyAlert("Class='alert alert-warning'", 'something is wrong or empty', 'Warning', "#alertContainer") }
         }
 
     //Validations
@@ -258,7 +258,7 @@
         var cellEmpty = true;
 
 
-        if (!$.isNumeric($("input[type='number']").val()) || $("input[type='number']").val() <= 0 || $("select[class='form-control'").val() == null || $summernote.code() == "<p><br></p>") {
+        if (!$.isNumeric($("input[type='number']").val()) || $("input[type='number']").val() <= 0 || $("select[class='form-control'").val() == null || $summernote.code() == "<p><br></p>" || $summernote.code() == "" ) {
             cellEmpty = false;
         }
 

@@ -152,7 +152,7 @@
 
     function createParcel() {
         if (validateMyForm()) {
-
+            
             var ObservationsList = [];
             $("tbody tr").each(function () {
                 var rowIndex = $table.row(this).index();
@@ -191,7 +191,8 @@
 
             });
         }
-        else { ValidateMyAlert("Class='alert alert-warning'", 'empty slot ', 'Warning', "#alertContainer") }
+        else {
+            ValidateMyAlert("Class='alert alert-warning'", 'something is wrong or empty', 'Warning', "#alertContainer") }
 
     }
 

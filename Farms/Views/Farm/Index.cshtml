@@ -50,6 +50,7 @@
             $("#edit").css("display", "none");
             $("#HiddenId").css("display", "none");
             $("#titleModel").text("Add new Row to table");
+            $("#warningModal").css("display", "none");
         });
 
         $("#DeleteModal").on('hidden.bs.modal', function () {
@@ -70,7 +71,7 @@
                     if (data) {
 
                         $table.row($("#indexId").val()).remove().draw();
-                        ValidateMyAlert("Class='alert alert-success'", ' Complete', 'Success', "#alertContainer")
+                      
 
                     }
 
@@ -228,7 +229,88 @@
 
             });
         }
+
     }
+
+    function ShowChild(button) {
+
+        var tr = $(button).closest("tr");
+        var actualRow = $table.row(tr);
+        var rowIndex = $table.row(actualRow).index();
+        var row = $table.row(rowIndex).data();
+
+        if (actualRow.child.isShown()) {
+            // This row is already open - close it
+            actualRow.child.hide();
+            tr.removeClass('shown');
+            changeOfClasses(button, "glyphicon glyphicon-plus", "glyphicon glyphicon-minus");
+        }
+        else {
+            $.ajaxSetup({ async: false });
+            var Trs = "";
+            $.ajax({
+                type: "GET",
+                url: "http://localhost:56892/Parcel/GetAllParcelByFarmId",
+                data: { farmId: row[1] },
+                dataType: "json",
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    
+                    $.each(data, function () {
+                        var description = this.Description;
+                        $.ajax({
+                            type: "GET",
+                            url: "http://localhost:56892/Plant/GetAllPlantsByParcelId",
+                            data: { parcelId: this.Id },
+                            dataType: "json",
+                            contentType: 'application/json; charset=utf-8',
+                            success: function (data) {
+                                console.log(data.length);
+                                Trs += "<tr>" +
+                                        "<td>" + description + "</td>" +
+                                        "<td>" + data.length+ "</td>" +
+                                    "</tr>" 
+                            }
+                        });
+                    });
+
+
+                },
+
+                error: function () {
+                    ValidateMyAlert("Class='alert alert-warning'", ' no se pudo eliminar :( ', 'Warning')
+                }
+
+            });
+            actualRow.child(format(Trs)).show();
+            tr.addClass('shown');
+            changeOfClasses(button, "glyphicon glyphicon-minus", "glyphicon glyphicon-plus");
+        }
+
+    }
+
+    function format(Trs) {
+        if (Trs == "") {
+            Trs = "<tr>" +
+                "<td>There is no data </td>" +
+                "</tr>" 
+        }
+
+
+        return "<table>" +
+                    "<thead>" +
+                        "<tr>" +
+                            "<th>  Parcel </th >" +
+                            "<th>Plant Count </th >" +
+                        "</tr>" +
+                    "</thead>" +
+                "<tbody>" +
+                    Trs +
+                "</tbody>" +
+            "</table>";
+    }
+
+
     function windowParcel(button) {
         console.log("asd");
         var actualRow = $(button).parents("tr");
@@ -238,6 +320,12 @@
     }
 
     //Validations
+
+
+    function changeOfClasses(Idelement, classToAdd, classToRemove) {
+        $(Idelement).removeClass(classToRemove).addClass(classToAdd);
+    }
+
     function ValidateMyAlert(pClass, pString, tMessege, insertSide) {
 
         if (!$("p[" + pClass + "]").length) {
@@ -249,9 +337,9 @@
 
     function validateMyModal() {
         var cellEmty = true;
-        if ($("#modalName").val().trim() == "" || $summernote.code() == "" || $summernote.code() == "<p><br></p>") {
-            $("#warningModal").css("display", "inline");    
+        if ($("#modalName").val().trim() == "" || $summernote.code() == "" || $summernote.code() == "<p><br></p>") {   
             cellEmty = false;
+            $("#warningModal").css("display", "inline");
         }
 
         else {

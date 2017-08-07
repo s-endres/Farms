@@ -105,8 +105,7 @@
 
                     if (data) {
 
-                        $table.row($("#indexId").val()).remove().draw();
-                        ValidateMyAlert("Class='alert alert-success'", ' Complete', 'Success', "#alertContainer")
+                        $table.row($("#indexId").val()).remove().draw();                
 
                     }
 
@@ -154,9 +153,88 @@
         window.location.replace('http://localhost:56892/Plant?parcelId=' + row[1]);
     }
 
+    function ShowChild(button) {
 
+        var tr = $(button).closest("tr");
+        var actualRow = $table.row(tr);
+        var rowIndex = $table.row(actualRow).index();
+        var row = $table.row(rowIndex).data();
+
+        if (actualRow.child.isShown()) {
+            // This row is already open - close it
+            actualRow.child.hide();
+            tr.removeClass('shown');
+            changeOfClasses(button, "glyphicon glyphicon-plus", "glyphicon glyphicon-minus");
+        }
+        else {
+            var Trs = "";
+            $.ajax({
+                type: "GET",
+                url: "http://localhost:56892/Plant/GetParcelByTypeAndCount",
+                data: { parcelId: row[1] },
+                dataType: "json",
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+
+                    $.each(data, function () {
+
+                        Trs += "<tr>" +
+                            "<td>" + this.type + "</td>" +
+                            "<td>" + this.count + "</td>" +
+                            "</tr>";
+                    });
+
+                    actualRow.child(format(Trs)).show();
+                    tr.addClass('shown');
+                    changeOfClasses(button, "glyphicon glyphicon-minus", "glyphicon glyphicon-plus");
+                },
+
+                error: function () {
+                    ValidateMyAlert("Class='alert alert-warning'", ' no se pudo eliminar :( ', 'Warning')
+                }
+            });
+            
+        }
+
+    }
+
+    function format(Trs) {
+        if (Trs == "") {
+            Trs = "<tr>" +
+                "<td>There is no data </td>" +
+                "</tr>"
+        }
+
+
+        return "<table>" +
+            "<thead>" +
+            "<tr>" +
+            "<th>  Type </th >" +
+            "<th> Count </th >" +
+            "</tr>" +
+            "</thead>" +
+            "<tbody>" +
+            Trs +
+            "</tbody>" +
+            "</table>";
+    }
+
+
+    function windowParcel(button) {
+        console.log("asd");
+        var actualRow = $(button).parents("tr");
+        var rowIndex = $table.row(actualRow).index();
+        var row = $table.row(rowIndex).data()
+        window.location.replace('http://localhost:56892/Parcel?farmId=' + row[1]);
+    }
 
     //Validations
+
+    function changeOfClasses(Idelement, classToAdd, classToRemove) {
+        $(Idelement).removeClass(classToRemove).addClass(classToAdd);
+    }
+
+
     function ValidateMyAlert(pClass, pString, tMessege, insertSide) {
 
         if (!$("p[" + pClass + "]").length) {
