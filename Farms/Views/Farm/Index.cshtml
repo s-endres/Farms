@@ -212,52 +212,6 @@
                 IdVal = $Table.row(Row).data().Id;
                 window.location.replace("http://localhost:56892/Parcel?farmId="+IdVal);
             });
-
-            //$("#MainTable tbody").on("click", ".glyphicon-download,.glyphicon-upload", function () {
-            //    var RClass = "glyphicon-download";
-            //    var AClass = "glyphicon-upload";
-
-            //    var Tr = $(this).closest("tr");/**HTML Row**/
-            //    var row = $Table.row(Tr);/**DataTable Row**/
-            //    var Index = $Table
-            //        .row(row)
-            //        .index();
-
-            //    if (row.child.isShown()) {
-            //        ShowLogo(this, AClass, RClass);
-            //        row.child.hide();
-            //        Tr.removeClass('shown');
-
-            //    }
-            //    else {
-            //        $.ajax({
-            //            type: "GET",
-            //            url: "http://localhost:56892/Farm/RemoveFarm",
-            //            data: { BookId: $Table.row(Index).data()[1] },
-            //            dataType: "json",
-            //            contentType: 'application/json; charset=utf-8',
-            //            success: function (data) {
-            //                console.log(row.child(Format(data)));
-            //                if (!data) {
-            //                    alert("Puto el que lo lea");
-
-
-            //                }
-            //                else {
-
-            //                    row.child(Format(data)).show();
-            //                    Tr.addClass('shown');
-
-            //                }/**Sends the datatable row data to the Format method and show it**/
-
-            //            },
-            //            error: function () {
-            //                alert("");
-            //            }
-            //        });//Close GET Authors Ajax
-            //        ShowLogo(this, RClass, AClass);
-            //    }
-            //});//Close the subtable function
         });//Close Document Ready
 
 /*********************************************FUNCTIONS AREA**********************************************/

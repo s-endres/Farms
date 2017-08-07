@@ -48,6 +48,7 @@
                 var results = new RegExp('[\?&]' + pName + '=([^&#]*)').exec(window.location.href);
                 return results[1] || 0;
             }
+
             ParcelObject = { parcelId: $.urlParam("parcelId") };
 
             $.ajax({
@@ -89,11 +90,12 @@
                     $("#Select1").val(Data.ConditionIds).trigger('change');
                     $("#hidden3").val(Data.IdFarm);
                     console.log(Data.ConditionIds);
-
+                    console.log(Data.Observations);
                     for (var i = 0; i < Data.Observations.length; i++) {
                         Data.Observations[i].Buttons = "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span>";
+                        console.log(Data.Observations[i]);
                     }
-
+                    console.log(Data.Observations[i]);
                     $Table = $("#MainTable").DataTable({
                         "processing": true,
                         "data": Data.Observations,
@@ -110,11 +112,11 @@
                     WarningMessage();
                 }
             });//Close GET Ajax
+
             $.urlParam = function (pName) {
                 var results = new RegExp('[\?&]' + pName + '=([^&#]*)').exec(window.location.href);
                 return results[1] || 0;
             }
-
 
             $("#AddObservation").click(function () {
 
@@ -163,6 +165,35 @@
 
                 });//PUT Ajax
             });//Edit Parcel 
+
+            $("tbody").on("click", ".glyphicon-ok-circle", function () {
+                $("#AddObservation").css("display", "none");
+                $("#EditRow").css("display", "inline");
+
+                var Row = $(this).parents("tr");
+                var Index = $Table.row(Row).index();
+                var Data = $Table.row(Index).data();
+
+                $SummerNote2.code(Data[0]);
+                $("#myModal").modal();
+            });//Print the row data in the modal
+
+            $("#EditRow").click(function () {
+
+
+                ObjEdit = {
+                    Description: $SummerNote2.code(),
+                    Buttons: "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span>"
+                };
+
+                $Table
+                    .row($("#hidden").val())
+                    .data(ObjEdit)
+                    .draw();
+                CloseModal();
+                //Close AJAX PUT For Edit
+
+            });//Edit Row
 
 
         });//Close Document Ready

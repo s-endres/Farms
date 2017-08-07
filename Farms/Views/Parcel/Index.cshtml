@@ -27,38 +27,21 @@
 <body>
     <script>
         $("document").ready(function () {
-            
-         
+
+
             $SummerNote = $("#Summernote").summernote({
                 height: 125,
                 codemirror: { theme: 'monokai' }
             });//Inicialize the Text Area
 
-            //$.urlParam = function (pName) {
-            //    var results = new RegExp('[\?&]' + pName + '=([^&#]*)').exec(window.location.href);
-            //    return results[1] || 0;
-            //}
-            //var FarmObject = {farmId: $.urlParam("farmId")}
-            //$.ajax({
-            //    type: "GET",
-            //    url: "http://localhost:56892/Parcel/GetAllParcelByFarmId",
-            //    data: "",
-            //    dataType: "json",
-            //    contentType: 'application/json; charset=utf-8',
-            //    success: function (pData) {
-
-            //    },
-            //    error: function () {
-            //        WarningMessage();
-            //    }
-            //});//Close AJAX GET
+           
 
             $.urlParam = function (pName) {
                 var results = new RegExp('[\?&]' + pName + '=([^&#]*)').exec(window.location.href);
                 return results[1] || 0;
             }
             var FarmObject = { farmId: $.urlParam("farmId") };
-            console.log(FarmObject);
+
 
             $.ajax({
                 type: "GET",
@@ -101,14 +84,56 @@
                     WarningMessage();
                 }
             });//Close AJAX GET
-           
-   
+
+
 
             $("tbody").on("click", ".glyphicon-ok-circle", function () {
-                    var Row = $(this).parents("tr");
-                    IdVal = $Table.row(Row).data().Id;
-                    window.location.replace("http://localhost:56892/Parcel/Edit?parcelId=" + IdVal);
+                var Row = $(this).parents("tr");
+                IdVal = $Table.row(Row).data().Id;
+                window.location.replace("http://localhost:56892/Parcel/Edit?parcelId=" + IdVal);
             });//redirects to the edit view
+
+            $("tbody").on("click", ".glyphicon-unchecked", function () {
+                var Row = $(this).parents("tr");
+                IdVal = $Table.row(Row).data().Id;
+                window.location.replace("http://localhost:56892/Plant?parcelId=" + IdVal);
+            });//redirects to the edit view
+
+            $("tbody").on("click", ".glyphicon-remove-circle", function () {
+                var Row = $(this).parents("tr");
+                var Index = $Table.row(Row).index();
+                $("#hidden3").val(Index);
+                var IdVal = $Table.row(Row).data().Id;
+                $("#hidden2").val(IdVal);
+                $("#myDeleteModal").modal();
+            });//Opens up the Delete modal confirmation
+
+            $("#YesDelete").click(function () {
+               
+                var parcelId = { parcelId: $("#hidden2").val() };
+                console.log(parcelId);
+                $.ajax({
+                    type: "DELETE",
+                    url: "http://localhost:56892/Parcel/RemoveParcel",
+                    data: JSON.stringify(parcelId),
+                    dataType: "json",
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (pData) {
+                        $("#myDeleteModal").modal("hide");
+                        $Table
+                            .row($("#hidden3").val())
+                            .remove()
+                            .draw();
+                    },
+                    error: function () {
+                        WarningMessage();
+                    }
+                });//Close AJAX DELETE
+            });
+
+            $("#NoDelete").click(function () {
+                $("#myDeleteModal").modal("hide");
+            });
 
             $("#AddParcelButton").click(function () {
                 window.location.replace("http://localhost:56892/Parcel/Create?farmId=" + $.urlParam("farmId"));
@@ -117,7 +142,7 @@
 
         });//Close Document Ready
 
-/*********************************************FUNCTIONS AREA**********************************************/
+        /*********************************************FUNCTIONS AREA**********************************************/
         function OpenModal() {
             $("#myModal").modal();
             $("#EditRow").css("display", "none");
@@ -144,6 +169,9 @@
         #hidden2 {
             display: none;
         }
+        #hidden3 {
+            display: none;
+        }
     </style>
 
 
@@ -167,13 +195,12 @@
                 <th>
                     <label>Buttons</label>
                 </th>
-                
+
             </tr>
         <tbody></tbody>
         </thead>
     </table>
     <!------------------------------------------MAIN TABLE------------------------------------------>
-
     <!------------------------------------------MODAL------------------------------------------>
     <div class="modal fade" id="myModal" role="dialog">
         <div class="modal-dialog">
@@ -229,6 +256,7 @@
                     <div class="alert alert-danger"><strong> Mah gosh </strong>Do you really want to delete this ??</div>
                 </div>
                 <input id="hidden2" type="text">
+                <input id="hidden3" type="text">
                 <div class="modal-footer">
 
                     <button type="submit" class="btn btn-success btn-block Display" id="YesDelete"><span class="glyphicon glyphicon-record"></span>Yes, i want to delete this</button>
@@ -241,12 +269,7 @@
     </div>
     <!------------------------------------DELETE MODAL------------------------------------->
     </div>
-    
+
     </div>
 </body>
 </html>
-
-
-
-
-
