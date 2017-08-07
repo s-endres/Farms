@@ -27,6 +27,12 @@
             return results[1] || 0;
         }
 
+        $.get('http://localhost:56892/Parcel/GetAllConditions', function (data) {
+            $.each(data, function () {
+                $("#Conditions").append("<option value='" + this.Id + "'>" + this.Name + "</option>");
+            });
+        });
+
         $.get('http://localhost:56892/Parcel/GetParcel?parcelId=' + $.urlParam('parcelId'), function (data) {
 
             $("#Size").val(data.Size);
@@ -38,22 +44,13 @@
                         "<span class='glyphicon glyphicon-edit'></span>"]).draw();
                 });
 
-        });
-
-        $.get('http://localhost:56892/Parcel/GetAllConditions', function (data) {
-            $.each(data, function () {
-                $("#Conditions").append("<option value='" + this.Id + "'>" + this.Name + "</option>");
-            });
-        });
+        }); 
 
         $summernote = $(".summernote").summernote({
             height: 100
         });
 
-        $("#Conditions").select2({
-            placeholder: "Select a condition"
-        });
-
+        
         $DTable = $('#myDT').DataTable();
 
         $('#myDT tbody').on('click', '.glyphicon-trash', function () {
@@ -74,6 +71,7 @@
         });
         
         $('#myDT tbody').on('click', '.glyphicon-edit', function () {
+            ModalReset();
             $("#myModal").modal();
             $('#btnEdit').css('display', 'inline');
             $('#btnAdd').css('display', 'none');
@@ -123,7 +121,26 @@
         $('.glyphicon').hover(function () {
             $(this).css('cursor', 'pointer');
         });
+
+        $("#Conditions").select2({
+            placeholder: "Select a condition"
+        });
+
     });//Doc Ready
+
+    function validateMyModal() {
+        var flag = true;
+        if ($("#DescriptionModalSummernote").code() == "") {
+            flag = false;
+            if (!$('.alert-danger').length) {
+                $(".modal").append("<div class='alert alert-danger'><strong>Does not meet requirements. </strong>Description is required.</div>");
+            } else {
+                $('.alert-danger').remove();
+                $(".modal").append("<div class='alert alert-danger'><strong>Does not meet requirements. </strong>Description is required.</div>");
+            }
+        }
+        return flag;
+    }
 
     function SwapClass(ThisText, ClassR, ClassA) {
         $(ThisText).removeClass(ClassR);
@@ -193,26 +210,32 @@
     }
 
     function add() {
-        $DTable.row.add([
-            $("#DescriptionModalSummernote").code(),
-            "<span class='glyphicon glyphicon-trash'></span> <span> | </span> " +
-            "<span class='glyphicon glyphicon-edit'></span>"
-        ]).draw();
-
+        if (validateMyModal()) {
+            $DTable.row.add([
+                $("#DescriptionModalSummernote").code(),
+                "<span class='glyphicon glyphicon-trash'></span> <span> | </span> " +
+                "<span class='glyphicon glyphicon-edit'></span>"
+            ]).draw();
+            $("#myModal").modal('toggle');
+        } 
     }
 
     function edit() {
-        var dtIndex = $("#hiddenModalInput").val();
-        var Data = $DTable.row(dtIndex).data();
-        Data[0] = $("#DescriptionModalSummernote").code();
-        $DTable.row(dtIndex).data(Data).draw();
-
+        if (validateMyModal()) {
+            var dtIndex = $("#hiddenModalInput").val();
+            var Data = $DTable.row(dtIndex).data();
+            Data[0] = $("#DescriptionModalSummernote").code();
+            $DTable.row(dtIndex).data(Data).draw();
+            $("#myModal").modal('toggle');
+        }
     }
 
     function ModalReset() {
         $('#btnEdit').css('display', 'none');
         $('#btnAdd').css('display', 'inline');
-        $("#DescriptionModalSummernote").code("");
+        $summernote.code("");
+        $('.alert-danger').remove();
+        $("#Id").parent().hide();
     }
 
 
@@ -283,8 +306,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" id="btnClose" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" id="btnAdd" class="btn btn-primary" onclick="add()" data-dismiss="modal">Add</button>
-                <button type="button" id="btnEdit" class="btn btn-primary" style="display:none" onclick="edit()" data-dismiss="modal">Edit</button>
+                <button type="button" id="btnAdd" class="btn btn-primary" onclick="add()">Add</button>
+                <button type="button" id="btnEdit" class="btn btn-primary" style="display:none" onclick="edit()">Edit</button>
             </div>
         </div>
     </div>
