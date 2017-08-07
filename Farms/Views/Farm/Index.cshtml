@@ -33,7 +33,6 @@
                 codemirror: { theme: 'monokai' }
             });//Inicialize the Text Area
 
-
             $.ajax({
                 type: "GET",
                 url: "http://localhost:56892/Farm/GetAllFarms",
@@ -75,7 +74,6 @@
                     WarningMessage();
                 }
             });//Close AJAX GET
-
             
             $("#EditRow").click(function () {
 
@@ -108,7 +106,6 @@
                     }
                 });//Close AJAX PUT For Edit
             });//Edit Funcction
-
 
             $("#AddFarm").click(function () {
                 $.ajax({
@@ -212,6 +209,53 @@
                 IdVal = $Table.row(Row).data().Id;
                 window.location.replace("http://localhost:56892/Parcel?farmId="+IdVal);
             });
+
+            $("#MainTable tbody").on("click", ".glyphicon-download,.glyphicon-upload", function () {
+                var RClass = "glyphicon-download";
+                var AClass = "glyphicon-upload";
+
+                var Tr = $(this).closest("tr");/**HTML Row**/
+                var row = $Table.row(Tr);/**DataTable Row**/
+                var Index = $Table.row(row).index();
+               
+                
+                if (row.child.isShown()) {
+                    ShowLogo(this, AClass, RClass);
+                    row.child.hide();
+                    Tr.removeClass('shown');
+                }
+                else {
+                    var GetFarmObject = { farmId: $Table.row(Index).data().Id };
+                    $.ajax({
+                        type: "GET",
+                        url: "http://localhost:56892/Parcel/GetAllParcelByFarmId",
+                        data: GetFarmObject,
+                        dataType: "json",
+                        contentType: 'application/json; charset=utf-8',
+                        success: function (pData) {
+                            
+                            if (!pData) {
+                                console.log("Didnt Worked :(");
+                            }
+                            else
+                            {
+                                row.child(Format(pData)).show();
+                            }
+                         
+                        },
+                        error: function () {
+                            alert("it isnt working >:(");
+                        }
+                    });//Close GET Authors Ajax
+                    ShowLogo(this, RClass, AClass);
+
+
+                }
+
+
+            });//Close Show More Function 
+
+
         });//Close Document Ready
 
 /*********************************************FUNCTIONS AREA**********************************************/
@@ -224,25 +268,28 @@
             $(".modal-content .form-control").not(".hidden").not(".hidden2").val("");
             $SummerNote.code("");
         }//Opens the modal
+
         function CloseModal()
         {
             $("#myModal").modal("hide");
         }//Closes the modal
+
         function WarningMessage() {
             if (!$('div[class="alert-danger"]').length) {
-                $("#myDT").prepend('<div class="alert alert-danger">< strong > Omaiga!</strong >Something went wrong >:O</div >');
+                $("#myModal").prepend('<div class="alert alert-danger">< strong > Omaiga!</strong >Something went wrong >:O</div >');
             }
         }//Close Warning Message function
 
         function Format(Data) {
 
-            var Table = "<table><thead><tr><th>Parcel:</th><th>Second Name</th><th>Plant Count</th></tr></thead><tbody>";
+            var Table = "<table><thead><tr><th>Parcel:</th><th>Plant Count</th></tr></thead><tbody>";
             $.each(Data, function (index, obj) {
-
-                Table += "<tr><td>" + obj.Parcel + "</td>" + "<td>" + obj.PlantCount + "</td>" + "</tr>";
+                console.log("Esta entrando");
+                Table += "<tr><td>" + obj.Description + "</td>" + "<td>a</td>" + "</tr>";
 
             });
             return Table + "</tbody>" + "</table>";
+
         }//Adds a format to the sent data
 
         function ShowLogo(pSelector, pRClass, pAClass) {
