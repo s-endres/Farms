@@ -22,13 +22,6 @@
 
     $(document).ready(function () {
 
-        //<!--DataTables  Initialization -- >
-        $table = $('#myDT').DataTable({
-            responsive: true,
-            "order": [[1, "asc"]],
-            "columnDefs": [{ "targets": [0, 4], "orderable": false }]
-        });
-
         $summernote = $(".summernote").summernote({
             height: 150,   //set editable area's height
             codemirror: { // codemirror options
@@ -74,17 +67,23 @@
             contentType: 'application/json; charset=utf-8',
             success: function (data) {
 
-                $.each(data, function () {
-                    var array = [
-                        "<td> <button type=\"button\" class=\"glyphicon glyphicon-plus\" onclick = \"ShowChild(this)\"></button> </td >",
-                        this.Id,
-                        this.Size,
-                        this.Description,
-                        "<button type=\"button\" data-toggle='modal' data-target='#DeleteModal' class=\"glyphicon glyphicon-trash\" onclick = \"removeRow(this)\"></button>" +
-                        "<button type=\"button\"  data-toggle='modal' data-target='#myModal' onclick =\"editRow(this)\" class = \"glyphicon glyphicon-pencil\"></button>" +
-                        "<button type=\"button\" onclick =\"windowPlant(this)\" class = \"glyphicon glyphicon-eye-open\"> </button>"
-                    ];
-                    $table.row.add(array).draw();
+                $table = $('#myDT').DataTable({
+                    responsive: true,
+                    "order": [[1, "asc"]],
+                    "data": data,
+                    "columns": [
+                        { "defaultContent": "<td> <button type=\"button\" class=\"glyphicon glyphicon-plus\" onclick = \"ShowChild(this)\"></button> </td>" },
+                        { "data": "Id" },
+                        { "data": "Size" },
+                        { "data": "Description" },
+                        { "defaultContent": "<button type=\"button\" data-toggle='modal' data-target='#DeleteModal' class=\"glyphicon glyphicon-trash\" onclick = \"removeRow(this)\"></button>" +
+                            "<button type=\"button\" data-toggle='modal' data-target='#myModal' onclick =\"editRow(this)\" class = \"glyphicon glyphicon-pencil\"></button>" +
+                            "<button type=\"button\" onclick =\"windowPlant(this)\" class = \"glyphicon glyphicon-eye-open\"> </button>"
+                        }
+                    ],
+                    "columnDefs": [
+                       { "targets": [0, 4], "orderable": false }
+                    ]
                 });
             },
 
@@ -110,13 +109,13 @@
                     }
 
                     else {
-                        ValidateMyAlert("Class='alert alert-warning'", ' Could not delete ', 'Warning', "#alertContainer")
+                        ValidateMyAlert("Class='alert alert-warning'", ' Could not delete ', 'Warning', "#alertContainer");
                     }
 
                 },
 
                 error: function () {
-                    ValidateMyAlert("Class='alert alert-danger'", 'error', 'Danger', "#alertContainer")
+                    ValidateMyAlert("Class='alert alert-danger'", 'error', 'Danger', "#alertContainer");
                 }
 
             });
@@ -131,26 +130,25 @@
 
         var actualRow = $(button).parents("tr");
         var rowIndex = $table.row(actualRow).index();
-        var row = $table.row(rowIndex).data()
-        $("#HiddenIndexDelete").val(row[1]);
-        $("#indexId").val(rowIndex)
+        var row = $table.row(rowIndex).data();
+        $("#HiddenIndexDelete").val(row.Id);
+        $("#indexId").val(rowIndex);
     }
 
 
     function editRow(button) {
         var actualRow = $(button).parents("tr");
         var rowIndex = $table.row(actualRow).index();
-        var row = $table.row(rowIndex).data()
-        window.location.replace('http://localhost:56892/Parcel/Edit?parcelId=' + row[1] + '&farmId=' + $.urlParam("farmId") );
+        var row = $table.row(rowIndex).data();
+        window.location.replace('http://localhost:56892/Parcel/Edit?parcelId=' + row.Id + '&farmId=' + $.urlParam("farmId"));
     }
 
 
     function windowPlant(button) {
-        console.log("asd");
         var actualRow = $(button).parents("tr");
         var rowIndex = $table.row(actualRow).index();
         var row = $table.row(rowIndex).data()
-        window.location.replace('http://localhost:56892/Plant?parcelId=' + row[1]);
+        window.location.replace('http://localhost:56892/Plant?parcelId=' + row.Id);
     }
 
     function ShowChild(button) {
@@ -171,7 +169,7 @@
             $.ajax({
                 type: "GET",
                 url: "http://localhost:56892/Plant/GetParcelByTypeAndCount",
-                data: { parcelId: row[1] },
+                data: { parcelId: row.Id },
                 dataType: "json",
                 contentType: 'application/json; charset=utf-8',
                 success: function (data) {
@@ -221,11 +219,10 @@
 
 
     function windowParcel(button) {
-        console.log("asd");
         var actualRow = $(button).parents("tr");
         var rowIndex = $table.row(actualRow).index();
         var row = $table.row(rowIndex).data()
-        window.location.replace('http://localhost:56892/Parcel?farmId=' + row[1]);
+        window.location.replace('http://localhost:56892/Parcel?farmId=' + row.Id);
     }
 
     //Validations

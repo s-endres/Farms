@@ -23,12 +23,7 @@
 
     $(document).ready(function () {
 
-        //<!--DataTables  Initialization -- >
-        $table = $('#myDT').DataTable({
-            responsive: true,
-            "order": [[1, "asc"]],
-            "columnDefs": [{ "targets": [0, 4], "orderable": false }]
-        });
+
 
         $summernote = $(".summernote").summernote({
             height: 150,   //set editable area's height
@@ -71,7 +66,7 @@
                     if (data) {
 
                         $table.row($("#indexId").val()).remove().draw();
-                      
+
 
                     }
 
@@ -98,19 +93,24 @@
             dataType: "json",
             contentType: 'application/json; charset=utf-8',
             success: function (data) {
-
-                $.each(data, function () {
-
-                    var array = [
-                        "<td> <button type=\"button\" class=\"glyphicon glyphicon-plus\" onclick = \"ShowChild(this)\"></button> </td>",
-                        this.Id,
-                        this.Name,
-                        this.Description,
-                        "<button type=\"button\" data-toggle='modal' data-target='#DeleteModal' class=\"glyphicon glyphicon-trash\" onclick = \"removeRow(this)\"></button>" +
-                        "<button type=\"button\" data-toggle='modal' data-target='#myModal' onclick =\"editRow(this)\" class = \"glyphicon glyphicon-pencil\"></button>" +
-                        "<button type=\"button\" onclick =\"windowParcel(this)\" class = \"glyphicon glyphicon-eye-open\"> </button>"
-                    ];
-                    $table.row.add(array).draw();
+                //<!--DataTables  Initialization -- >
+                $table = $('#myDT').DataTable({
+                    responsive: true,
+                    "order": [[1, "asc"]],
+                    "data": data,
+                    "columns": [
+                        { "defaultContent": "<td> <button type=\"button\" class=\"glyphicon glyphicon-plus\" onclick = \"ShowChild(this)\"></button> </td>" },
+                        { "data": "Id" },
+                        { "data": "Name" },
+                        { "data": "Description" },
+                        { "defaultContent": "<button type=\"button\" data-toggle='modal' data-target='#DeleteModal' class=\"glyphicon glyphicon-trash\" onclick = \"removeRow(this)\"></button>" +
+                            "<button type=\"button\" data-toggle='modal' data-target='#myModal' onclick =\"editRow(this)\" class = \"glyphicon glyphicon-pencil\"></button>" +
+                            "<button type=\"button\" onclick =\"windowParcel(this)\" class = \"glyphicon glyphicon-eye-open\"> </button>"
+                        }
+                    ],
+                    "columnDefs": [
+                        { "targets": [0, 4], "orderable": false }
+                    ]
                 });
 
             },
@@ -138,16 +138,12 @@
                 success: function (data) {
 
                     if (data) {
-                        var array = [
-                            "<td> <button type=\"button\" class=\"glyphicon glyphicon-plus\" onclick = \"ShowChild(this)\"></button> </td >",
-                            data.Id,
-                            data.Name,
-                            data.Description,
-                            "<button type=\"button\" data-toggle='modal' data-target='#DeleteModal' class=\"glyphicon glyphicon-trash\" onclick = \"removeRow(this)\"></button>" +
-                            "<button type=\"button\"  data-toggle='modal' data-target='#myModal' onclick =\"editRow(this)\" class = \"glyphicon glyphicon-pencil\"></button>" +
-                            "<button type=\"button\"  onclick=\"windowParcel(this)\" class = \"glyphicon glyphicon-eye-open\"> </button>"
-                        ];
-                        $table.row.add(array).draw();
+                        var obj = {
+                            Id: data.Id,
+                            Name: data.Name,
+                            Description: data.Description                    
+                        };
+                        $table.row.add(obj).draw();
                         $("#closeMyModal").click();
                     }
                     else {
@@ -170,7 +166,7 @@
         var actualRow = $(button).parents("tr");
         var rowIndex = $table.row(actualRow).index();
         var row = $table.row(rowIndex).data()
-        $("#HiddenIndexDelete").val(row[1]);
+        $("#HiddenIndexDelete").val(row.Id);
         $("#indexId").val(rowIndex)
     }
 
@@ -179,14 +175,14 @@
 
         $("#Add").css("display", "none");
         $("#edit").css("display", "inline");
-        $("#HiddenId").css("display", "inline");    
+        $("#HiddenId").css("display", "inline");
         $("#titleModel").text("Edit Row");
         var ActualRow = $(button).parents("tr");
         var rowIndex = $table.row(ActualRow).index();
         var row = $table.row(rowIndex).data()
-        $("#FarmId").val(row[1]);
-        $("#modalName").val(row[2]);
-        $summernote.code(row[3]);
+        $("#FarmId").val(row.Id);
+        $("#modalName").val(row.Name);
+        $summernote.code(row.Description);
         $("#indexId").val(rowIndex);
     }
     function editFarmBotton() {
@@ -203,16 +199,12 @@
                 contentType: 'application/json; charset=utf-8',
                 success: function (data) {
                     if (data) {
-                        var array = [
-                            "<td> <button type=\"button\" class=\"glyphicon glyphicon-plus\" onclick = \"ShowChild(this)\"></button> </td >",
-                            data.Id,
-                            data.Name,
-                            data.Description,
-                            "<button type=\"button\" data-toggle='modal' data-target='#DeleteModal' class=\"glyphicon glyphicon-trash\" onclick = \"removeRow(this)\"></button>" +
-                            "<button type=\"button\"  data-toggle='modal' data-target='#myModal' onclick =\"editRow(this)\" class = \"glyphicon glyphicon-pencil\"></button>" +
-                            "<button type=\"button\" onclick =\"windowParcel(this)\" class = \"glyphicon glyphicon-eye-open\"> </button>"
-                        ];
-                        $table.row($("#indexId").val()).data(array).draw();
+                        var obj = {                         
+                            Id :data.Id,
+                            Name:data.Name,
+                            Description:data.Description
+                        };
+                        $table.row($("#indexId").val()).data(obj).draw();
                         $("#closeMyModal").click();
 
                         $("#closeMyModal").click();
@@ -251,11 +243,11 @@
             $.ajax({
                 type: "GET",
                 url: "http://localhost:56892/Parcel/GetAllParcelByFarmId",
-                data: { farmId: row[1] },
+                data: { farmId: row.Id },
                 dataType: "json",
                 contentType: 'application/json; charset=utf-8',
                 success: function (data) {
-                    
+
                     $.each(data, function () {
                         var description = this.Description;
                         $.ajax({
@@ -267,9 +259,9 @@
                             success: function (data) {
                                 console.log(data.length);
                                 Trs += "<tr>" +
-                                        "<td>" + description + "</td>" +
-                                        "<td>" + data.length+ "</td>" +
-                                    "</tr>" 
+                                    "<td>" + description + "</td>" +
+                                    "<td>" + data.length + "</td>" +
+                                    "</tr>"
                             }
                         });
                     });
@@ -293,20 +285,20 @@
         if (Trs == "") {
             Trs = "<tr>" +
                 "<td>There is no data </td>" +
-                "</tr>" 
+                "</tr>"
         }
 
 
         return "<table>" +
-                    "<thead>" +
-                        "<tr>" +
-                            "<th>  Parcel </th >" +
-                            "<th>Plant Count </th >" +
-                        "</tr>" +
-                    "</thead>" +
-                "<tbody>" +
-                    Trs +
-                "</tbody>" +
+            "<thead>" +
+            "<tr>" +
+            "<th>  Parcel </th >" +
+            "<th>Plant Count </th >" +
+            "</tr>" +
+            "</thead>" +
+            "<tbody>" +
+            Trs +
+            "</tbody>" +
             "</table>";
     }
 
@@ -316,7 +308,7 @@
         var actualRow = $(button).parents("tr");
         var rowIndex = $table.row(actualRow).index();
         var row = $table.row(rowIndex).data()
-        window.location.replace('http://localhost:56892/Parcel?farmId=' + row[1] );
+        window.location.replace('http://localhost:56892/Parcel?farmId=' + row.Id);
     }
 
     //Validations
@@ -337,7 +329,7 @@
 
     function validateMyModal() {
         var cellEmty = true;
-        if ($("#modalName").val().trim() == "" || $summernote.code() == "" || $summernote.code() == "<p><br></p>") {   
+        if ($("#modalName").val().trim() === "" || $summernote.code() ==="" ) {
             cellEmty = false;
             $("#warningModal").css("display", "inline");
         }
@@ -360,7 +352,7 @@
 
 <div class="panel-heading">
     DataTable Advanced Table |
-    <button type="button" class="glyphicon glyphicon-plus" data-toggle="modal" data-target="#myModal"></button>   
+    <button type="button" class="glyphicon glyphicon-plus" data-toggle="modal" data-target="#myModal"></button>
 </div>
 <table id="myDT" class="table">
     <thead>
@@ -385,10 +377,10 @@
     <tbody></tbody>
 </table>
 
- 	<!-- Modal -->
+<!-- Modal -->
 <div id="myModal" class="modal fade" role="dialog">
-    <div style="display:none" id="warningModal" >
-        <p class ='alert alert-danger'><strong> Empty Slot </strong>  Load the slot and try again  </p>
+    <div style="display:none" id="warningModal">
+        <p class='alert alert-danger'><strong> Empty Slot </strong>  Load the slot and try again  </p>
     </div>
     <div class="modal-dialog">
 
@@ -404,13 +396,13 @@
 
                 <div style="display:none" id="HiddenId">
                     <label for="qwe"> Id</label><br>
-                    <input type="text" class=" form-control HiddenIndexx" id="FarmId"  disabled> </input><br>
+                    <input type="text" class=" form-control HiddenIndexx" id="FarmId" disabled> </input><br>
                 </div>
                 <label for="usr">Name:</label><br>
                 <input type="text" class="form-control HiddenIndex" id="modalName"> </input><br>
                 <label for="asd">Description:</label><br>
                 <textarea id="summernoteId " class="summernote"></textarea><br>
-                <input type="text" class=" form-control HiddenIndexx"  style="display:none" id="indexId"> </input><br>
+                <input type="text" class=" form-control HiddenIndexx" style="display:none" id="indexId"> </input><br>
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal" id="closeMyModal">Close</button>
@@ -423,7 +415,7 @@
     </div>
 </div>
 
-	<!-- Delete Modal -->
+<!-- Delete Modal -->
 <div class="modal fade" id="DeleteModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel">
     <div class="modal-dialog" role="document">
         <div class="modal-content">

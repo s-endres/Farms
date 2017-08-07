@@ -135,17 +135,24 @@
             dataType: "json",
             contentType: 'application/json; charset=utf-8',
             success: function (data) {
-                $.each(data, function () {
-                    var array = [
-                        this.Id,
-                        this.Name,
-                        this.Description,
-                        this.PlantedDate,
-                        getPlantType(this.PlantType),
-                        "<button type=\"button\" data-toggle='modal' data-target='#DeleteModal' class=\"glyphicon glyphicon-trash\" onclick = \"removeRow(this)\"></button>" +
-                        "<button type=\"button\"  data-toggle='modal' data-target='#myModal' onclick =\"editRow(this)\" class = \"glyphicon glyphicon-pencil\"></button>"
+                $table = $('#myDT').DataTable({
+                    responsive: true,
+                    "order": [[1, "asc"]],
+                    "data": data,
+                    "columns": [
+                        { "defaultContent": "<td> <button type=\"button\" class=\"glyphicon glyphicon-plus\" onclick = \"ShowChild(this)\"></button> </td>" },
+                        { "data": "Id" },
+                        { "data": "Size" },
+                        { "data": "Description" },
+                        {
+                            "defaultContent": "<button type=\"button\" data-toggle='modal' data-target='#DeleteModal' class=\"glyphicon glyphicon-trash\" onclick = \"removeRow(this)\"></button>" +
+                            "<button type=\"button\" data-toggle='modal' data-target='#myModal' onclick =\"editRow(this)\" class = \"glyphicon glyphicon-pencil\"></button>" +
+                            "<button type=\"button\" onclick =\"windowPlant(this)\" class = \"glyphicon glyphicon-eye-open\"> </button>"
+                        }
+                    ],
+                    "columnDefs": [
+                        { "targets": [0, 4], "orderable": false }
                     ]
-                    $table.row.add(array).draw();
                 });
             },
 
