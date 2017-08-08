@@ -93,9 +93,8 @@
                     console.log(Data.Observations);
                     for (var i = 0; i < Data.Observations.length; i++) {
                         Data.Observations[i].Buttons = "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span>";
-                        console.log(Data.Observations[i]);
+
                     }
-                    console.log(Data.Observations[i]);
                     $Table = $("#MainTable").DataTable({
                         "processing": true,
                         "data": Data.Observations,
@@ -132,39 +131,39 @@
                     .draw();
                 CloseModal();
 
-            });
+            });//Adds Observations
 
             $("#EditParcel").click(function () {
-                
+
                 var pArray = [];
-                $.each($Table.rows().data(), function () {    
+                $.each($Table.rows().data(), function () {
                     var ObjIndex = { Id: this.index, Description: this.Description };
                     pArray.push(ObjIndex);
-                });    
+                });
+                if (ValidateTextArea() && ValidateForm() && ValidateSelect()) {
+                    $.ajax({
+                        type: "PUT",
+                        url: "http://localhost:56892/Parcel/UpdateParcel",
+                        data: JSON.stringify({
+                            Id: $.urlParam("parcelId"),
+                            Size: $("#SizeInput").val(),
+                            Description: $SummerNote.code(),
+                            IdFarm: $("#hidden3").val(),
+                            Observations: pArray,
+                            ConditionIds: $("#Select1").val()
+                        }),
+                        dataType: "json",
+                        contentType: 'application/json; charset=utf-8',
+                        success: function (Pdata) {
+                            window.location.replace("http://localhost:56892/Parcel?farmId=" + $("#hidden3").val());
+                        },
+                        error: function () {
+                            WarningMessage();
+                        }
 
-                $.ajax({
-                    type: "PUT",
-                    url: "http://localhost:56892/Parcel/UpdateParcel",
-                    data: JSON.stringify({
-                        Id: $.urlParam("parcelId"),
-                        Size: $("#SizeInput").val(),
-                        Description: $SummerNote.code(),
-                        IdFarm: $("#hidden3").val(),
-                        Observations: pArray,
-                        ConditionIds: $("#Select1").val()
-                    }),
-                    dataType: "json",
-                    contentType: 'application/json; charset=utf-8',
-                    success: function (Pdata) {                   
-                        window.location.replace("http://localhost:56892/Parcel?farmId="+ $("#hidden3").val());
-                    },
-                    error: function () {
-                        WarningMessage();
-                    }
-
-
-                });//PUT Ajax
-            });//Edit Parcel 
+                    });//PUT Ajax
+                }
+            });//Edit Parcel
 
             $("tbody").on("click", ".glyphicon-ok-circle", function () {
                 $("#AddObservation").css("display", "none");
@@ -173,25 +172,26 @@
                 var Row = $(this).parents("tr");
                 var Index = $Table.row(Row).index();
                 var Data = $Table.row(Index).data();
-
+                $("#hidden").val(Index);
                 $SummerNote2.code(Data[0]);
                 $("#myModal").modal();
+                console.log($SummerNote2.code());
             });//Print the row data in the modal
 
             $("#EditRow").click(function () {
 
-
-                ObjEdit = {
-                    Description: $SummerNote2.code(),
-                    Buttons: "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span>"
-                };
-
-                $Table
-                    .row($("#hidden").val())
-                    .data(ObjEdit)
-                    .draw();
-                CloseModal();
-                //Close AJAX PUT For Edit
+                if (ValidateTextAreaModal()) {
+                    var ObjEdit = {
+                        Description: $SummerNote2.code(),
+                        Buttons: "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span>"
+                    };
+                    console.log($("#hidden").val());
+                    $Table
+                        .row($("#hidden").val())
+                        .data(ObjEdit)
+                        .draw();
+                    CloseModal();
+                }
 
             });//Edit Row
 
@@ -215,20 +215,45 @@
                 $("#myDT").prepend('<div class="alert alert-danger">< strong > Omaiga!</strong >Something went wrong >:O</div >');
             }
         }//Close Warning Message function
-        function Format(Data) {
 
-            var Table = "<table><thead><tr><th>Parcel:</th><th>Second Name</th><th>Plant Count</th></tr></thead><tbody>";
-            $.each(Data, function (index, obj) {
+        function ValidateTextArea() {
+            if ($SummerNote.code() === "") {
+                $(".Form-Class").prepend('<div class="alert alert-danger"><strong>Omaiga!</strong> You can insert a Farm without a description >:v</div>');
+                return false;
+            }
+            return true;
+        }//Validates the text Area
 
-                Table += "<tr><td>" + obj.Parcel + "</td>" + "<td>" + obj.PlantCount + "</td>" + "</tr>";
+        function ValidateTextAreaModal() {
+            if ($SummerNote2.code() === "<p><br></p>" || $SummerNote2.code() === "") {
+                $(".ValidationModal").prepend('<div class="alert alert-danger"><strong>Omaiga!</strong> You can insert a Farm without description >:3</div>');
+                return false;
+            }
+            return true;
+        }//Validates the text Area (MODAL)
 
-            });
-            return Table + "</tbody>" + "</table>";
-        }//Adds a format to the sent data
-        function ShowLogo(pSelector, pRClass, pAClass) {
-            $(pSelector).removeClass(pRClass);
-            $(pSelector).addClass(pAClass);
-        }//Swaps the icon of the show more row
+        function ValidateForm() {
+            var Error = true;
+            if ($("#SizeInput").val().trim() == "") {
+                $("#SizeInput").addClass("Error");
+                    Error = false;
+                }
+                else {
+                $("#SizeInput").removeClass("Error");
+                }
+           
+            return Error;
+        }//Close Validation function
+
+        function ValidateSelect() {
+            if ($("#Select1").val() == null) {
+                $(".Form-Class").prepend('<div class="alert alert-danger"><strong>Omaiga!</strong> You can insert a farm without conditions >:o </div>');
+                return false;
+            }
+            return true;
+
+        }//Validates the select
+
 
     </script>
     <style>
@@ -239,16 +264,20 @@
         #hidden2 {
             display: none;
         }
-         #hidden3 {
+
+        #hidden3 {
             display: none;
         }
 
+        .Error {
+            border: solid 1px red;
+        }
     </style>
 
-    <form role="form">
+    <form role="form" class="Form-Class">
         <div class="form-group">
             <label for="usrname"><span class="glyphicon glyphicon-lock Data"></span>Size</label>
-            <input type="text" class="form-control Data" id="SizeInput" placeholder="Enter Size">
+            <input type="text" class="form-control Data NewOne" id="SizeInput" placeholder="Enter Size">
         </div>
         <div class="form-group">
             <label for="usrname"><span class="glyphicon glyphicon-user"></span> Description</label>
@@ -291,7 +320,7 @@
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                     <h4><span class="glyphicon glyphicon-add"></span> Add Farm Information :3</h4>
                 </div>
-                <div class="modal-body" id="modal-body" style="padding:40px 50px;">
+                <div class="modal-body ValidationModal" id="modal-body" style="padding:40px 50px;">
 
                     <form role="form">
 
@@ -342,8 +371,3 @@
     </div>
 </body>
 </html>
-
-
-
-
-

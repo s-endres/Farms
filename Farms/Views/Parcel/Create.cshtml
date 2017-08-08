@@ -110,34 +110,33 @@
                     var results = new RegExp('[\?&]' + pName + '=([^&#]*)').exec(window.location.href);
                     return results[1] || 0;
                 }
-                 var pArray = [];
+                var pArray = [];
                 $.each($Table.rows().data(), function () {    
                     var ObjIndex = { Id: this.index, Description: this.Description };
                     pArray.push(ObjIndex);
                 });  
-
+                if (ValidateTextArea() && ValidateForm() && ValidateSelect()) {
                 $.ajax({
                     type: "POST",
                     url: "http://localhost:56892/Parcel/AddParcel",
                     data: JSON.stringify({
                         
-                        Size: $("#SizeInput").val(),
-                        Description: $SummerNote.code(),
-                        IdFarm: $.urlParam("farmId"),
-                        Observations: pArray,
-                        ConditionIds: $("#Select1").val()
-                    }),
+                    Size: $("#SizeInput").val(),
+                    Description: $SummerNote.code(),
+                    IdFarm: $.urlParam("farmId"),
+                    Observations: pArray,
+                    ConditionIds: $("#Select1").val()
+                }),
                     dataType: "json",
                     contentType: 'application/json; charset=utf-8',
                     success: function (Pdata) {
                         window.location.replace("http://localhost:56892/Parcel?farmId=" + $.urlParam("farmId"));
-                    },
+                },
                     error: function () {
                         WarningMessage();
-                    }
-
-
-                });//PUT Ajax
+                }
+                });//POST Ajax
+            }
             });//Edit Parcel
 
             $("tbody").on("click", ".glyphicon-remove-circle", function () {
@@ -174,22 +173,23 @@
             });//Print the row data in the modal
 
             $("#EditRow").click(function () {
-                
 
-                ObjEdit = {
-                    Description: $SummerNote2.code(),
-                    Buttons: "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span>"
-                };
-             
-                        $Table
-                            .row($("#hidden").val())
-                            .data(ObjEdit)
-                            .draw();
-                        CloseModal();
+                if (ValidateTextAreaModal()) {
+                    ObjEdit = {
+                        Description: $SummerNote2.code(),
+                        Buttons: "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span>"
+                    };
+
+                    $Table
+                        .row($("#hidden").val())
+                        .data(ObjEdit)
+                        .draw();
+                    CloseModal();
                     //Close AJAX PUT For Edit
-         
-            });//Edit Row
 
+                }
+            });//Edit Row with MODAL
+            
 
         });//Close Document Ready
 
@@ -225,6 +225,45 @@
             $(pSelector).addClass(pAClass);
         }//Swaps the icon of the show more row
 
+
+        function ValidateTextArea() {
+            if ($SummerNote.code() === "") {
+                $(".Form-Class").prepend('<div class="alert alert-danger"><strong>Omaiga!</strong> You can create a Farm without a description >:v</div>');
+                return false;
+            }
+            return true;
+        }//Validates the text Area
+
+        function ValidateTextAreaModal() {
+            if ($SummerNote2.code() === "<p><br></p>" || $SummerNote2.code() === "") {
+                $(".ValidationModal").prepend('<div class="alert alert-danger"><strong>Omaiga!</strong> You can create a Farm without description >:3</div>');
+                return false;
+            }
+            return true;
+        }//Validates the text Area (MODAL)
+
+        function ValidateForm() {
+            var Error = true;
+            if ($("#SizeInput").val().trim() == "") {
+                $("#SizeInput").addClass("Error");
+                Error = false;
+            }
+            else {
+                $("#SizeInput").removeClass("Error");
+            }
+
+            return Error;
+        }//Close Validation function
+
+        function ValidateSelect() {
+            if ($("#Select1").val() == null) {
+                $(".Form-Class").prepend('<div class="alert alert-danger"><strong>Omaiga!</strong> You can create a farm without conditions >:o </div>');
+                return false;
+            }
+            return true;
+
+        }//Validates the select
+
     </script>
     <style>
         #hidden {
@@ -240,10 +279,13 @@
         }
         #hidden4 {
             display: none;
+        } 
+        .Error {
+            border: solid 1px red;
         }
     </style>
 
-    <form role="form">
+    <form role="form" class="Form-Class">
         <div class="form-group">
             <label for="usrname"><span class="glyphicon glyphicon-lock Data"></span>Size</label>
             <input type="text" class="form-control Data" id="SizeInput" placeholder="Enter Size">
@@ -289,7 +331,7 @@
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                     <h4><span class="glyphicon glyphicon-add"></span> Add Farm Information :3</h4>
                 </div>
-                <div class="modal-body" id="modal-body" style="padding:40px 50px;">
+                <div class="modal-body ValidationModal" id="modal-body" style="padding:40px 50px;">
 
                     <form role="form">
 
