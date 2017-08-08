@@ -79,6 +79,7 @@
             var tableLength = $table.data().length;
             if (tableLength == 0) {
                 $("#btnSave").prop("disabled", true);
+                $("#alertTable").css("display", "inline");
             }
             $("#closeDeleteModal").click();
         });
@@ -131,6 +132,7 @@
                 $table.row.add(Data).draw();
                 $("#closeMyModal").click(); //Cerrar modal
                 $("#btnSave").prop("disabled", false);
+                $("#alertTable").css("display", "none");
             }
         }
 
@@ -299,6 +301,9 @@
         </div>
     </div>
     <div class="form-group">
+        <div id="alertTable" style="display:none">
+            <p Class='alert alert-info'> <strong>info! </strong> You need an observation </p>
+        </div>
         <div>
             <input type="button" id="btnSave" value="Edit" class="btn btn-default" />
         </div>

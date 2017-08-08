@@ -139,8 +139,7 @@
                         { "data": "PlantedDate" },
                         { "data": "PlantType"},
                         {"defaultContent": "<button type=\"button\" data-toggle='modal' data-target='#DeleteModal' class=\"glyphicon glyphicon-trash\" onclick = \"removeRow(this)\"></button>" +
-                            "<button type=\"button\" data-toggle='modal' data-target='#myModal' onclick =\"editRow(this)\" class = \"glyphicon glyphicon-pencil\"></button>" +
-                            "<button type=\"button\" onclick =\"windowPlant(this)\" class = \"glyphicon glyphicon-eye-open\"> </button>"
+                            "<button type=\"button\" data-toggle='modal' data-target='#myModal' onclick =\"editRow(this)\" class = \"glyphicon glyphicon-pencil\"></button>" 
                         }
                     ],
                     "columnDefs": [
@@ -173,9 +172,11 @@
         return type;
     }
 
+
     function AddPlant() {
         if (validateMyModal()) {
             console.log($("#selectPlantType").val());
+            $.ajaxSetup({ async: false });
             $.ajax({
                 type: "POST",
                 url: "http://localhost:56892/Plant/AddPlant",
@@ -195,7 +196,7 @@
                             Name:data.Name,
                             Description:data.Description,
                             PlantedDate:data.PlantedDate,
-                            PlantType:getPlantType(data.PlantType)
+                            PlantType: getPlantType(data.PlantType)
                         }
                         $table.row.add(obj).draw();
                         $("#closeMyModal").click();
@@ -215,7 +216,7 @@
         var actualRow = $(button).parents("tr");
         var rowIndex = $table.row(actualRow).index();
         var row = $table.row(rowIndex).data();
-        $("#HiddenIndexDelete").val(row[0]);
+        $("#HiddenIndexDelete").val(row.Id);
         $("#indexId").val(rowIndex)
     }
 
@@ -238,6 +239,7 @@
 
     function editFarmBotton() {
         if (validateMyModal()) {
+            $.ajaxSetup({ async: false });
             $.ajax({
                 type: "PUT",
                 url: " http://localhost:56892/Plant/UpdatePlant",
@@ -247,7 +249,7 @@
                     Description: $summernote.code(),
                     PlantedDate: $("#modalPlantedDate").val(),
                     IdParcel: $.urlParam("parcelId"),
-                    PlantType: $("#selectPlantType").val()
+                    PlantType:$("#selectPlantType").val()
                 }),
                 dataType: "json",
                 contentType: 'application/json; charset=utf-8',
@@ -260,7 +262,8 @@
                             PlantedDate: data.PlantedDate,
                             PlantType: getPlantType(data.PlantType)
                         }
-                        $table.row($("#indexId").val()).data(data).draw();
+                        console.log(obj.PlantType);
+                        $table.row($("#indexId").val()).data(obj).draw();
                         $("#closeMyModal").click();
                     }
                     else {
