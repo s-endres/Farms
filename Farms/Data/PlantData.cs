@@ -30,7 +30,7 @@ namespace Farms.Data
             },
             new Plant()
             {
-                Id = 2,
+                Id = 3,
                 Name = "Bella",
                 Description = "Ut wisi enim ad minim veniam, quis nostrud exerci tation u",
                 PlantedDate = "2017-04-10",

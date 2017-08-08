@@ -16,7 +16,6 @@ namespace Farms.Data
                 Size = 15.98,
                 Description = "asdasdasdasdasdasdasd",
                 IdFarm = 1,
-                PlantIds = new List<int>(){1,2},
                 ConditionIds = new List<int>(){3,4},
                 Observations = new List<Observation>()
                 {
@@ -38,7 +37,6 @@ namespace Farms.Data
                 Size = 176.98,
                 Description = "qwe qwe qweqw eqwe qwe",
                 IdFarm = 1,
-                PlantIds = new List<int>(){1,2},
                 ConditionIds = new List<int>(){3,4}
             }
         };
