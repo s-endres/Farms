@@ -22,8 +22,15 @@
     $(document).ready(function () {
 
         //<!--DataTables  Initialization -- >
-        $table = $('#datatable').DataTable({
+        $table = $("#datatable").DataTable({
             responsive: true,
+            "columns": [
+                { "data": "Description" },
+                {
+                    "defaultContent": "<button type=\"button\"  data-toggle='modal' data-target='#DeleteModal' class=\"glyphicon glyphicon-trash\" onclick = \"removeRow(this)\"></button> " +
+                    "<button type=\"button\" data-toggle=\"modal\" data-target=\"#myModal\" onclick =\"editRow(this)\" class = \"glyphicon glyphicon-pencil\">"
+                }
+            ],
             "columnDefs": [{
                 "targets": [1],
                 "orderable": false
@@ -31,7 +38,6 @@
         });
 
         //<!--Select Initialization -- 
-
         $("#selectConditions").select2({
             placeholder: "Select a Conditions",
             allowClear: true
@@ -52,7 +58,6 @@
         });
 
         //<--Event jQuery -->
-
         $.urlParam = function (name) {
             var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
             return results[1] || 0;
@@ -64,8 +69,8 @@
 
         $("#myModal").on('hidden.bs.modal', function () {
             $summernoteModal.code("");
-            $("#warningModal").css("display", "none");
-        })
+            $("#myModal p[Class='alert alert-danger']").remove();
+        });
 
         $("#yesDelete").click(function () {
 
@@ -76,8 +81,7 @@
                 $("#btnSave").prop("disabled", true);
             }
             $("#closeDeleteModal").click();
-        })
-
+        });
 
         $.ajax({
             type: "GET",
@@ -92,7 +96,7 @@
             },
 
             error: function () {
-                ValidateMyAlert("Class='alert alert-warning'", 'stephan te falle :c', 'Warning')
+                ValidateMyAlert("Class='alert alert-danger'", 'error', 'Danger', "#alertContainer");
             }
 
         });
@@ -100,7 +104,7 @@
         $.ajax({
             type: "GET",
             url: "http://localhost:56892/Parcel/GetParcel",
-            data: {parcelId: $.urlParam("parcelId") },
+            data: { parcelId: $.urlParam("parcelId") },
             dataType: "json",
             contentType: 'application/json; charset=utf-8',
             success: function (data) {
@@ -110,159 +114,141 @@
                 $("#selectConditions").val(data.ConditionIds).trigger('change');
 
                 $.each(data.Observations, function () {
-                    var array = [
-                        this.Description,
-                        "<button type=\"button\"  data-toggle='modal' data-target='#DeleteModal' class=\"glyphicon glyphicon-trash\" onclick = \"removeRow(this)\"></button> " +
-                        "<button type=\"button\" data-toggle=\"modal\" data-target=\"#myModal\" onclick =\"editRow(this)\" class = \"glyphicon glyphicon-pencil\">"
-                    ];
-                    $table.row.add(array).draw();
-
+                    var Data = {
+                        Description: this.Description
+                    };
+                    $table.row.add(Data).draw();
                 });
-            },
-
-            error: function () {
-                ValidateMyAlert("Class='alert alert-warning'", 'stephan te falle :c', 'Warning')
             }
         });
-
-
     });
 
-
-    function AddObservation() {
-
-        if (validateMyModal()) {
-            var Data = [
-                $summernoteModal.code(),
-                "<button type=\"button\"  data-toggle='modal' data-target='#DeleteModal' class=\"glyphicon glyphicon-trash\" onclick = \"removeRow(this)\"></button> " +
-                "<button type=\"button\" data-toggle=\"modal\" data-target=\"#myModal\" onclick =\"editRow(this)\" class = \"glyphicon glyphicon-pencil\">"
-            ];
-            $table.row.add(Data).draw();
-
-            $("#closeMyModal").click(); //Cerrar modal
-            $("#btnSave").prop("disabled", false);
-
+        function AddObservation() {
+            if (validateMyModal()) {
+                var Data = {
+                    Description: $summernoteModal.code(),
+                };
+                $table.row.add(Data).draw();
+                $("#closeMyModal").click(); //Cerrar modal
+                $("#btnSave").prop("disabled", false);
+            }
         }
-    }
 
-    function removeRow(button) {
-
-        var ActualRow = $(button).parents("tr");
-        var rowIndex = $table.row(ActualRow).index();
-        $("#HiddenIndexDelete").val(rowIndex);
-    }
-
-    function editRow(button) {
-        $("#Add").css("display", "none");
-        $("#edit").css("display", "inline");
-        $("#titleModel").text("Edit");
-        var ActualRow = $(button).parents("tr");
-        var rowIndex = $table.row(ActualRow).index();
-        var row = $table.row(rowIndex).data()
-        $summernoteModal.code(row[0]);
-        $("#HiddenIndex").val(rowIndex);
-    }
-
-    function editObservation() {
-
-        if (validateMyModal()) {
-            var Data = [
-                $summernoteModal.code(),
-                "<button type=\"button\"  data-toggle='modal' data-target='#DeleteModal' class=\"glyphicon glyphicon-trash\" onclick = \"removeRow(this)\"></button> " +
-                "<button type=\"button\" data-toggle=\"modal\" data-target=\"#myModal\" onclick =\"editRow(this)\" class = \"glyphicon glyphicon-pencil\">"
-            ];
-            $table.row($("#HiddenIndex").val()).data(Data).draw();
-
-            $("#Add").css("display", "inline");
-            $("#edit").css("display", "none");
-            $("#titleModel").text("Add new Row to table");
-            $("#closeMyModal").click();
+        function removeRow(button) {
+            var ActualRow = $(button).parents("tr");
+            var rowIndex = $table.row(ActualRow).index();
+            $("#HiddenIndexDelete").val(rowIndex);
         }
-    }
 
+        function editRow(button) {
+            $("#Add").css("display", "none");
+            $("#edit").css("display", "inline");
+            $("#titleModel").text("Edit");
+            var ActualRow = $(button).parents("tr");
+            var rowIndex = $table.row(ActualRow).index();
+            var row = $table.row(rowIndex).data();
+            $summernoteModal.code(row.Description);
+            $("#HiddenIndex").val(rowIndex);
+        }
 
-    function EditParcel() {
+        function editObservation() {
+            if (validateMyModal()) {
+                var Data = {
+                    Description: $summernoteModal.code(),
+                };
+                $table.row($("#HiddenIndex").val()).data(Data).draw();
+                $("#Add").css("display", "inline");
+                $("#edit").css("display", "none");
+                $("#titleModel").text("Add new Row to table");
+                $("#closeMyModal").click();
+            }
+        }
 
-        if (validateMyForm()) {
-
-            var ObservationsList = [];
-            $("tbody tr").each(function () {
-                var rowIndex = $table.row(this).index();
-                var row = $table.row(rowIndex).data()
-                var obj = { Description: row[0] }
-                ObservationsList.push(obj);
-            });
-
-            $.ajax({
-                type: "PUT",
-                url: "http://localhost:56892/Parcel/UpdateParcel",
-                data: JSON.stringify({
-                    Id: $.urlParam("parcelId"),
-                    Size: $("#inputSize").val(),
-                    Description: $summernote.code(),
-                    IdFarm: $.urlParam("farmId"),
-                    Observations: ObservationsList,
-                    PublicationYear: $("#PublicationYear").val(),
-                    ConditionIds: $("#selectConditions").val()
-                }),
-                dataType: "json",
-                contentType: 'application/json; charset=utf-8',
-                success: function (data) {
-                    if (data) {
-
-                        window.location.replace('http://localhost:56892/Parcel?farmId=' + $.urlParam("farmId"));
+        function EditParcel() {
+            if (validateMyForm()) {
+                var ObservationsList = [];
+                $("tbody tr").each(function () {
+                    var rowIndex = $table.row(this).index();
+                    var row = $table.row(rowIndex).data();
+                    var obj = { Description: row.Description }
+                    ObservationsList.push(obj);
+                });
+                $.ajax({
+                    type: "PUT",
+                    url: "http://localhost:56892/Parcel/UpdateParcel",
+                    data: JSON.stringify({
+                        Id: $.urlParam("parcelId"),
+                        Size: $("#inputSize").val(),
+                        Description: $summernote.code(),
+                        IdFarm: $.urlParam("farmId"),
+                        Observations: ObservationsList,
+                        PublicationYear: $("#PublicationYear").val(),
+                        ConditionIds: $("#selectConditions").val()
+                    }),
+                    dataType: "json",
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (data) {
+                        if (data) {
+                            window.location.replace('http://localhost:56892/Parcel?farmId=' + $.urlParam("farmId"));
+                        }
+                        else {
+                            ValidateMyAlert("Class='alert alert-danger'", 'data is false', 'Warning', "#alertContainer");
+                        }
+                    },
+                    error: function () {
+                        ValidateMyAlert("Class='alert alert-danger'", 'Error', 'Danger', "#alertContainer");
                     }
-                    else {
-                        ValidateMyAlert("Class='alert alert-warning'", 'data is false', 'Warning', "#alertContainer")
-                    }
-
-                },
-
-                error: function () {
-                    ValidateMyAlert("Class='alert alert-danger'", 'Error', 'Danger', "#alertContainer")
-                }
-
-            });
-        }
-        else {
-
-            ValidateMyAlert("Class='alert alert-warning'", 'something is wrong or empty', 'Warning', "#alertContainer") }
+                });
+            }
         }
 
     //Validations
     function ValidateMyAlert(pClass, pString, tMessege, insertSide) {
-
         if (!$("p[" + pClass + "]").length) {
-            $("p[class='alert']").remove();
             $(insertSide).prepend("<p " + pClass + "><strong>" + tMessege + "</strong> " + pString + " </p>");
         }
-
+        else {
+            $("p[" + pClass + "]").remove();
+            $(insertSide).prepend("<p " + pClass + "><strong>" + tMessege + "</strong> " + pString + " </p>");
+        }
     }
 
     function validateMyModal() {
         var cellEmty = true;
-        if ($summernoteModal.code() == "" || $summernoteModal.code() == "<p><br></p>") {
-            $("#warningModal").css("display", "inline");
+        if ($summernoteModal.code() === "" || $summernoteModal.code() === "<p><br></p>") {
+            ValidateMyAlert("Class='alert alert-danger'", 'Description is Required', 'Warning', "#myModal");
             cellEmty = false;
         }
-
-        else {
-            $("#warningModal").css("display", "none");
-        }
-
-
         return cellEmty;
     }
 
     function validateMyForm() {
         var cellEmpty = true;
+        if (!$.isNumeric($("input[type='number']").val()) || $("input[type='number']").val() <= 0) {
+            changeClass($("input[type='number']").parent(), "has-success", "has-error");
+            ValidateMyAlert("Class='alert alert-danger'", 'Size is Required', 'Warning', "#alertContainer");
+            cellEmpty = false;
+        }
+        else { changeClass($("input[type='number']").parent(), "has-error", "has-success"); }
 
+        if ($("select[class='form-control'").val() == null) {
+            changeClass($("select[class='form-control'").parent(), "has-success", "has-error");
+            ValidateMyAlert("Class='alert alert-danger'", 'Conditions is Required', 'Warning', "#alertContainer");
+            cellEmpty = false;
+        }
+        else { changeClass($("select[class='form-control]").parent(), "has-error", "has-success"); }
 
-        if (!$.isNumeric($("input[type='number']").val()) || $("input[type='number']").val() <= 0 || $("select[class='form-control'").val() == null || $summernote.code() == "<p><br></p>" || $summernote.code() == "" ) {
+        if ($summernote.code() === "" || $summernote.code() === "<p><br></p>") {
+            ValidateMyAlert("Class='alert alert-danger'", 'Description is Required', 'Warning', "#alertContainer");
             cellEmpty = false;
         }
 
         return cellEmpty;
+    }
+
+    function changeClass(input, classRemove, classAdd) {
+        input.removeClass(classRemove);
+        input.addClass(classAdd);
     }
 
 </script>
@@ -321,9 +307,6 @@
 
 <!-- Modal -->
 <div id="myModal" class="modal fade" role="dialog">
-    <div style="display:none" id="warningModal">
-        <p class='alert alert-danger'><strong> Empty Slot </strong>  Load the slot and try again  </p>
-    </div>
     <div class="modal-dialog">
 
         <!-- Modal content-->

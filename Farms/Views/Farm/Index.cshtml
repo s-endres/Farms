@@ -18,13 +18,15 @@
 <link href="/bower_components/summernote/css/summernote.css" rel="stylesheet" type="text/css">
 <script src="/bower_components/summernote/js/summernote.min.js"></script>
 
+<style>
+    .Error {
+        border: solid 1px red;
+    }
+</style>
 
 <script>
 
     $(document).ready(function () {
-
-
-
         $summernote = $(".summernote").summernote({
             height: 150,   //set editable area's height
             codemirror: { // codemirror options
@@ -32,9 +34,7 @@
             }
         });
 
-
         //<--Event jQuery -->
-
 
         $("#myModal").on('hidden.bs.modal', function () {
             $("#HiddenIndexDelete").val("");
@@ -45,7 +45,8 @@
             $("#edit").css("display", "none");
             $("#HiddenId").css("display", "none");
             $("#titleModel").text("Add new Row to table");
-            $("#warningModal").css("display", "none");
+            $(".HiddenIndex, input[type='date]'").removeClass("Error");
+            $("#myModal p[Class='alert alert-danger']").remove();
         });
 
         $("#DeleteModal").on('hidden.bs.modal', function () {
@@ -62,29 +63,19 @@
                 dataType: "json",
                 contentType: 'application/json; charset=utf-8',
                 success: function (data) {
-
                     if (data) {
-
                         $table.row($("#indexId").val()).remove().draw();
-
-
                     }
-
                     else {
-                        ValidateMyAlert("Class='alert alert-warning'", ' Could not delete ', 'Warning', "#alertContainer")
+                        ValidateMyAlert("Class='alert alert-warning'", ' Could not delete ', 'Warning', "#alertContainer");
                     }
-
                 },
-
                 error: function () {
-                    ValidateMyAlert("Class='alert alert-danger'", 'error', 'Danger', "#alertContainer")
+                    ValidateMyAlert("Class='alert alert-danger'", 'error', 'Danger', "#alertContainer");
                 }
-
             });
-
             $("#closeDeleteModal").click();
         })
-
 
         $.ajax({
             type: "GET",
@@ -103,7 +94,8 @@
                         { "data": "Id" },
                         { "data": "Name" },
                         { "data": "Description" },
-                        { "defaultContent": "<button type=\"button\" data-toggle='modal' data-target='#DeleteModal' class=\"glyphicon glyphicon-trash\" onclick = \"removeRow(this)\"></button>" +
+                        {
+                            "defaultContent": "<button type=\"button\" data-toggle='modal' data-target='#DeleteModal' class=\"glyphicon glyphicon-trash\" onclick = \"removeRow(this)\"></button>" +
                             "<button type=\"button\" data-toggle='modal' data-target='#myModal' onclick =\"editRow(this)\" class = \"glyphicon glyphicon-pencil\"></button>" +
                             "<button type=\"button\" onclick =\"windowParcel(this)\" class = \"glyphicon glyphicon-eye-open\"> </button>"
                         }
@@ -114,17 +106,14 @@
                 });
 
             },
-
             error: function () {
                 ValidateMyAlert("Class='alert alert-danger'", 'error', 'Danger', "#alertContainer");
             }
-
         });
     })
 
     function AddFarm() {
         if (validateMyModal()) {
-
             console.log($("#modalName").val() + $summernote.code());
             $.ajax({
                 type: "POST",
@@ -136,50 +125,40 @@
                 dataType: "json",
                 contentType: 'application/json; charset=utf-8',
                 success: function (data) {
-
                     if (data) {
                         var obj = {
                             Id: data.Id,
                             Name: data.Name,
-                            Description: data.Description                    
+                            Description: data.Description
                         };
                         $table.row.add(obj).draw();
                         $("#closeMyModal").click();
                     }
-                    else {
-
-                        ValidateMyAlert("Class='alert alert-warning'", 'Could not be added', 'Warning', "#alertContainer");
-                    }
-
+                    else { ValidateMyAlert("Class='alert alert-warning'", 'Could not be added', 'Warning', "#alertContainer"); }  
                 },
-
                 error: function () {
                     ValidateMyAlert("Class='alert alert-danger'", 'error', 'Danger', "#alertContainer");
                 }
-
             });
         }
     }
 
     function removeRow(button) {
-
         var actualRow = $(button).parents("tr");
         var rowIndex = $table.row(actualRow).index();
-        var row = $table.row(rowIndex).data()
+        var row = $table.row(rowIndex).data();
         $("#HiddenIndexDelete").val(row.Id);
-        $("#indexId").val(rowIndex)
+        $("#indexId").val(rowIndex);
     }
 
-
     function editRow(button) {
-
         $("#Add").css("display", "none");
         $("#edit").css("display", "inline");
         $("#HiddenId").css("display", "inline");
         $("#titleModel").text("Edit Row");
         var ActualRow = $(button).parents("tr");
         var rowIndex = $table.row(ActualRow).index();
-        var row = $table.row(rowIndex).data()
+        var row = $table.row(rowIndex).data();
         $("#FarmId").val(row.Id);
         $("#modalName").val(row.Name);
         $summernote.code(row.Description);
@@ -199,33 +178,23 @@
                 contentType: 'application/json; charset=utf-8',
                 success: function (data) {
                     if (data) {
-                        var obj = {                         
-                            Id :data.Id,
-                            Name:data.Name,
-                            Description:data.Description
+                        var obj = {
+                            Id: data.Id,
+                            Name: data.Name,
+                            Description: data.Description
                         };
                         $table.row($("#indexId").val()).data(obj).draw();
                         $("#closeMyModal").click();
-
-                        $("#closeMyModal").click();
                     }
                     else {
-                        ValidateMyAlert("Class='alert alert-warning'", 'Something is wrong', 'Warning', "#alertContainer")
+                        ValidateMyAlert("Class='alert alert-warning'", 'Something is wrong', 'Warning', "#alertContainer");
                     }
-
-                },
-
-                error: function () {
-                    ValidateMyAlert("Class='alert alert-danger'", 'Error whith edit', 'Danger', "#alertContainer")
                 }
-
             });
         }
-
     }
 
     function ShowChild(button) {
-
         var tr = $(button).closest("tr");
         var actualRow = $table.row(tr);
         var rowIndex = $table.row(actualRow).index();
@@ -257,7 +226,6 @@
                             dataType: "json",
                             contentType: 'application/json; charset=utf-8',
                             success: function (data) {
-                                console.log(data.length);
                                 Trs += "<tr>" +
                                     "<td>" + description + "</td>" +
                                     "<td>" + data.length + "</td>" +
@@ -265,30 +233,23 @@
                             }
                         });
                     });
-
-
                 },
-
                 error: function () {
-                    ValidateMyAlert("Class='alert alert-warning'", ' no se pudo eliminar :( ', 'Warning')
+                    ValidateMyAlert("Class='alert alert-warning'", ' no se pudo eliminar :( ', 'Warning');
                 }
-
             });
             actualRow.child(format(Trs)).show();
             tr.addClass('shown');
             changeOfClasses(button, "glyphicon glyphicon-minus", "glyphicon glyphicon-plus");
         }
-
     }
 
     function format(Trs) {
-        if (Trs == "") {
-            Trs = "<tr>" +
-                "<td>There is no data </td>" +
-                "</tr>"
+        if (Trs === "") {
+            Trs = "<p Class='alert alert-danger'> <strong>¡¡</strong> There is not data </p >";
+            return Trs;
         }
-
-
+        else{
         return "<table>" +
             "<thead>" +
             "<tr>" +
@@ -299,49 +260,49 @@
             "<tbody>" +
             Trs +
             "</tbody>" +
-            "</table>";
+                "</table>";
+            }
     }
-
 
     function windowParcel(button) {
         console.log("asd");
         var actualRow = $(button).parents("tr");
         var rowIndex = $table.row(actualRow).index();
-        var row = $table.row(rowIndex).data()
+        var row = $table.row(rowIndex).data();
         window.location.replace('http://localhost:56892/Parcel?farmId=' + row.Id);
     }
 
     //Validations
-
-
     function changeOfClasses(Idelement, classToAdd, classToRemove) {
         $(Idelement).removeClass(classToRemove).addClass(classToAdd);
     }
 
     function ValidateMyAlert(pClass, pString, tMessege, insertSide) {
-
         if (!$("p[" + pClass + "]").length) {
-            $("p[class='alert']").remove();
             $(insertSide).prepend("<p " + pClass + "><strong>" + tMessege + "</strong> " + pString + " </p>");
         }
-
+        else {
+            $("p[" + pClass + "]").remove();
+            $(insertSide).prepend("<p " + pClass + "><strong>" + tMessege + "</strong> " + pString + " </p>");
+        }
     }
 
     function validateMyModal() {
         var cellEmty = true;
-        if ($("#modalName").val().trim() === "" || $summernote.code() ==="" ) {
+        if ($(".HiddenIndex").val().trim() === "") {
+            $(".HiddenIndex").addClass("Error");
+            ValidateMyAlert("Class='alert alert-danger'", 'name is Required', 'Warning', "#myModal");
             cellEmty = false;
-            $("#warningModal").css("display", "inline");
         }
+        else { $(".HiddenIndex").removeClass("Error"); }
 
-        else {
-            $("#warningModal").css("display", "none");
+        if ($summernote.code() ==="" || $summernote.code() ==="<p><br></p>") {
+            ValidateMyAlert("Class='alert alert-danger'", 'Description is Required', 'Warning', "#myModal");
+            cellEmty = false;
         }
-
 
         return cellEmty;
     }
-
 
 
 </script>
@@ -379,9 +340,6 @@
 
 <!-- Modal -->
 <div id="myModal" class="modal fade" role="dialog">
-    <div style="display:none" id="warningModal">
-        <p class='alert alert-danger'><strong> Empty Slot </strong>  Load the slot and try again  </p>
-    </div>
     <div class="modal-dialog">
 
         <!-- Modal content-->

@@ -23,20 +23,25 @@
     $(document).ready(function () {
 
         //<!--DataTables  Initialization -- >
-        $table = $('#datatable').DataTable({
+        $table = $("#datatable").DataTable({
             responsive: true,
+            "columns": [
+                { "data": "Description" },
+                {
+                    "defaultContent": "<button type=\"button\"  data-toggle='modal' data-target='#DeleteModal' class=\"glyphicon glyphicon-trash\" onclick = \"removeRow(this)\"></button> " +
+                    "<button type=\"button\" data-toggle=\"modal\" data-target=\"#myModal\" onclick =\"editRow(this)\" class = \"glyphicon glyphicon-pencil\">"
+                }
+            ],
             "columnDefs": [{
                 "targets": [1],
                 "orderable": false
             }]
         });
 
-        //<!--Select Initialization -- 
-
         $("#selectConditions").select2({
-            placeholder: "Select a Conditions",
-            allowClear: true
-        });
+                placeholder: "Select a Conditions",
+                allowClear: true
+            });
 
         $summernote = $("#summernoteId").summernote({
             height: 150,   //set editable area's height
@@ -64,7 +69,8 @@
 
         $("#myModal").on('hidden.bs.modal', function () {
             $summernoteModal.code("");
-            $("#warningModal").css("display", "none");
+            $("#myModal p[Class='alert alert-danger']").remove();
+           
         })
 
         $("#yesDelete").click(function () {
@@ -89,28 +95,20 @@
                 $.each(data, function () {
                     $("#selectConditions").append("<option value=" + this.Id + ">" + this.Name + "</option>");
                 });
-            },
-
-            error: function () {
-                ValidateMyAlert("Class='alert alert-warning'", 'stephan te falle :c', 'Warning')
             }
-
         });
     });
 
     function AddObservation() {
 
         if (validateMyModal()) {
-            var Data = [
-                $summernoteModal.code(),
-                "<button type=\"button\"  data-toggle='modal' data-target='#DeleteModal' class=\"glyphicon glyphicon-trash\" onclick = \"removeRow(this)\"></button> "+
-                "<button type=\"button\" data-toggle=\"modal\" data-target=\"#myModal\" onclick =\"editRow(this)\" class = \"glyphicon glyphicon-pencil\">"
-            ];
-               $table.row.add(Data).draw();
+            var Data = {
+                Description:$summernoteModal.code()
+            };
+            $table.row.add(Data).draw();
 
-               $("#closeMyModal").click(); //Cerrar modal
-               $("#btnSave").prop("disabled", false);
-
+            $("#closeMyModal").click(); //Cerrar modal
+            $("#btnSave").prop("disabled", false);
         }
     }
 
@@ -126,20 +124,18 @@
         $("#edit").css("display", "inline");
         $("#titleModel").text("Edit");
         var ActualRow = $(button).parents("tr");
-        var rowIndex =$table.row(ActualRow).index();
+        var rowIndex = $table.row(ActualRow).index();
         var row = $table.row(rowIndex).data()
-        $summernoteModal.code(row[0]);
+        $summernoteModal.code(row.Description);
         $("#HiddenIndex").val(rowIndex);
     }
 
     function editObservation() {
 
         if (validateMyModal()) {
-            var Data = [
-                $summernoteModal.code(),
-                "<button type=\"button\"  data-toggle='modal' data-target='#DeleteModal' class=\"glyphicon glyphicon-trash\" onclick = \"removeRow(this)\"></button> " +
-                "<button type=\"button\" data-toggle=\"modal\" data-target=\"#myModal\" onclick =\"editRow(this)\" class = \"glyphicon glyphicon-pencil\">"
-            ];
+            var Data = {
+                Description: $summernoteModal.code(),
+            };
             $table.row($("#HiddenIndex").val()).data(Data).draw();
 
             $("#Add").css("display", "inline");
@@ -152,12 +148,11 @@
 
     function createParcel() {
         if (validateMyForm()) {
-            
             var ObservationsList = [];
             $("tbody tr").each(function () {
                 var rowIndex = $table.row(this).index();
                 var row = $table.row(rowIndex).data()
-                var obj = {Description: row[0]}
+                var obj = { Description: row.Description }
                 ObservationsList.push(obj);
             });
 
@@ -180,56 +175,56 @@
                         window.location.replace('http://localhost:56892/Parcel?farmId=' + $.urlParam("farmId"));
                     }
                     else {
-                        ValidateMyAlert("Class='alert alert-warning'", 'data is false', 'Warning', "#alertContainer")
+                        ValidateMyAlert("Class='alert alert-danger'", 'data is false', 'Warning', "#alertContainer");
                     }
-
                 },
-
                 error: function () {
-                    ValidateMyAlert("Class='alert alert-danger'", 'Error', 'Danger', "#alertContainer" )
+                    ValidateMyAlert("Class='alert alert-danger'", 'Error', 'Danger', "#alertContainer");
                 }
-
             });
         }
-        else {
-            ValidateMyAlert("Class='alert alert-warning'", 'something is wrong or empty', 'Warning', "#alertContainer") }
-
     }
 
     //Validations
     function ValidateMyAlert(pClass, pString, tMessege, insertSide) {
-
         if (!$("p[" + pClass + "]").length) {
-            $("p[class='alert']").remove();
             $(insertSide).prepend("<p " + pClass + "><strong>" + tMessege + "</strong> " + pString + " </p>");
         }
-
+        else {
+            $("p[" + pClass + "]").remove();
+            $(insertSide).prepend("<p " + pClass + "><strong>" + tMessege + "</strong> " + pString + " </p>");
+        }
     }
 
     function validateMyModal() {
         var cellEmty = true;
-        if ($summernoteModal.code() == "" || $summernoteModal.code() == "<p><br></p>") {
-            $("#warningModal").css("display", "inline");
+        if ($summernoteModal.code() ==="" || $summernoteModal.code() === "<p><br></p>") {
+            ValidateMyAlert("Class='alert alert-danger'", 'Description is Required', 'Warning', "#myModal");
             cellEmty = false;
         }
-
-        else {
-            $("#warningModal").css("display", "none");
-        }
-
-
-        return cellEmty;
+       return cellEmty;
     }
 
     function validateMyForm() {
         var cellEmpty = true;
-
-
-        if (!$.isNumeric($("input[type='number']").val()) || $("input[type='number']").val() <= 0 || $("select[class='form-control'").val() == null || $summernote.val().trim() == "" || $summernote.code() == "<p><br></p>") {
+        if (!$.isNumeric($("input[type='number']").val()) || $("input[type='number']").val() <= 0 ){
             changeClass($("input[type='number']").parent(), "has-success", "has-error");
+            ValidateMyAlert("Class='alert alert-danger'", 'Size is Required', 'Warning', "#alertContainer");
             cellEmpty = false;
         }
         else { changeClass($("input[type='number']").parent(), "has-error", "has-success"); }
+
+        if ($("select[class='form-control'").val() == null) {
+            changeClass($("select[class='form-control'").parent(), "has-success", "has-error");
+            ValidateMyAlert("Class='alert alert-danger'", 'Conditions is Required', 'Warning', "#alertContainer");
+            cellEmpty = false;
+        }
+        else { changeClass($("select[class='form-control]").parent(), "has-error", "has-success"); }
+
+        if ($summernote.val().trim() === "" || $summernote.code() === "<p><br></p>") {
+            ValidateMyAlert("Class='alert alert-danger'", 'Description is Required', 'Warning', "#alertContainer");
+            cellEmpty = false;
+        }
 
         return cellEmpty;
     }
@@ -248,7 +243,7 @@
     <div class="form-group">
         <label class="control-label col-md-2">Size</label>
         <div class="col-md-10">
-            <input type="number" id="inputSize" class="form-control" ></input>
+            <input type="number" id="inputSize" class="form-control"></input>
         </div>
     </div>
 
@@ -261,8 +256,8 @@
 
     <div class="form-group">
         <label class="control-label col-md-2">Conditions</label>
-        <div class="col-md-10">
-            <select id="selectConditions" class="form-control" multiple > </select>
+        <div class="col-md-10" >
+            <select id="selectConditions" class="form-control" multiple> </select>
         </div>
     </div>
 
@@ -295,9 +290,6 @@
 
 <!-- Modal -->
 <div id="myModal" class="modal fade" role="dialog">
-    <div style="display:none" id="warningModal">
-        <p class='alert alert-danger'><strong> Empty Slot </strong>  Load the slot and try again  </p>
-    </div>
     <div class="modal-dialog">
 
         <!-- Modal content-->
@@ -316,7 +308,7 @@
                         <textarea id="summernoteModal" class="summernote"></textarea>
                     </div>
                 </div>
-                <input type="text"  id="HiddenIndex" style="display:none"> </input>
+                <input type="text" id="HiddenIndex" style="display:none"> </input>
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal" id="closeMyModal">Close</button>
