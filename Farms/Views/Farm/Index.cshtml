@@ -40,10 +40,10 @@
                 dataType: "json",
                 contentType: 'application/json; charset=utf-8',
                 success: function (pData) {
-                    
+
 
                     for (var i = 0; i < pData.length; i++) {
-                        
+
                         pData[i].ShowMore = "<span class='glyphicon glyphicon-download' class='Shown'>";
                         pData[i].Buttons = "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span> |" + " <span class='glyphicon glyphicon-unchecked'></span>";
                     }
@@ -68,18 +68,18 @@
                         "order": [[1, "asc"]],
 
                     });//Inicialize the Data Table
-   
+
                 },
                 error: function () {
                     WarningMessage();
                 }
             });//Close AJAX GET
-            
+
             $("#EditRow").click(function () {
 
 
                 ObjEdit = {
-                    ShowMore:"<span class='glyphicon glyphicon-download' class='Shown'>",
+                    ShowMore: "<span class='glyphicon glyphicon-download' class='Shown'>",
                     Id: $("#Id").val(),
                     Name: $("#Name").val(),
                     Description: $SummerNote.code(),
@@ -97,7 +97,7 @@
                           .data(ObjEdit)
                           .draw();
                         CloseModal();
-                        
+
 
                     },
                     error: function () {
@@ -115,7 +115,7 @@
                         ShowMore: "<span class='glyphicon glyphicon-download' class='Shown'>",
                         Name: $("#Name").val(),
                         Description: $SummerNote.code(),
-                        Buttons: "<span class='glyphicon glyphicon-remove-circle'></span> |"+ " <span class='glyphicon glyphicon-ok-circle'></span> |"+" <span class='glyphicon glyphicon-unchecked'></span>"
+                        Buttons: "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span> |" + " <span class='glyphicon glyphicon-unchecked'></span>"
                     }),
                     dataType: "json",
                     contentType: 'application/json; charset=utf-8',
@@ -124,7 +124,7 @@
                             ShowMore: "<span class='glyphicon glyphicon-download' class='Shown'>",
                             Id: pData.Id,
                             Name: $("#Name").val(),
-                            Description:$SummerNote.code(),
+                            Description: $SummerNote.code(),
                             Buttons: "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span> |" + " <span class='glyphicon glyphicon-unchecked'></span>"
                         }
                         //console.log(pData);
@@ -149,12 +149,12 @@
                 var Row = $(this).parents("tr");
                 var Index = $Table.row(Row).index();
                 var Data = $Table.row(Index).data();
-               
+
                 $("#Id").val(Data.Id);
                 $("#Name").val(Data.Name);
                 $SummerNote.code(Data.Description);
                 $("#hidden").val(Index);
-                
+
             });//Opens the edit Modal
 
             $("tbody").on("click", ".glyphicon-remove-circle", function () {
@@ -173,7 +173,7 @@
             });//Obtains the index value of the row for the Delete
 
             $("#YesDelete").click(function () {
-                
+
                 ObjDelete = { farmId: $Table.row($("#hidden2").val()).data().Id }
                 console.log(ObjDelete);
                 $.ajax({
@@ -183,7 +183,7 @@
                     dataType: "json",
                     contentType: 'application/json; charset=utf-8',
                     success: function (Data) {
-                        
+
                         if (Data) {
                             $Table.row($("#hidden2").val()).remove().draw();
                             $("#myDeleteModal").modal("hide");
@@ -207,7 +207,7 @@
             $("tbody").on("click", ".glyphicon-unchecked", function () {
                 var Row = $(this).parents("tr");
                 IdVal = $Table.row(Row).data().Id;
-                window.location.replace("http://localhost:56892/Parcel?farmId="+IdVal);
+                window.location.replace("http://localhost:56892/Parcel?farmId=" + IdVal);
             });
 
             $("#MainTable tbody").on("click", ".glyphicon-download,.glyphicon-upload", function () {
@@ -217,8 +217,8 @@
                 var Tr = $(this).closest("tr");/**HTML Row**/
                 var row = $Table.row(Tr);/**DataTable Row**/
                 var Index = $Table.row(row).index();
-               
-                
+
+
                 if (row.child.isShown()) {
                     ShowLogo(this, AClass, RClass);
                     row.child.hide();
@@ -226,6 +226,7 @@
                 }
                 else {
                     var GetFarmObject = { farmId: $Table.row(Index).data().Id };
+                    $.ajaxSetup({ async: false });
                     $.ajax({
                         type: "GET",
                         url: "http://localhost:56892/Parcel/GetAllParcelByFarmId",
@@ -233,34 +234,56 @@
                         dataType: "json",
                         contentType: 'application/json; charset=utf-8',
                         success: function (pData) {
-                            
+
                             if (!pData) {
                                 console.log("Didnt Worked :(");
                             }
-                            else
-                            {
-                                row.child(Format(pData)).show();
+                            else {
+                                var TableRows = "";
+                                $.each(pData, function () {
+
+                                    var ParcelObjectId = { parcelId: this.Id };
+                                    console.log(this.Id);
+                                    var Description = this.Description;
+                                    console.log(Description);
+                                    
+                                    $.ajax({
+                                        type: "GET",
+                                        url: "http://localhost:56892/Plant/GetAllPlantsByParcelId",
+                                        data: ParcelObjectId,
+                                        dataType: "json",
+                                        contentType: 'application/json; charset=utf-8',
+                                        success: function (Data) {
+
+                                            TableRows += "<tr><td>" + Description + "</td>" + "<td>" + Data.length + "</td></tr>";
+                                            
+                                        },
+                                        error: function () {
+                                        }
+                                    });
+                                });//Close GET Plant Count Ajax
+
+                                row.child(Format(TableRows)).show();
                             }
-                         
+
                         },
                         error: function () {
                             alert("it isnt working >:(");
                         }
-                    });//Close GET Authors Ajax
+                    });//Close GET Description Ajax
                     ShowLogo(this, RClass, AClass);
 
 
                 }
 
 
-            });//Close Show More Function 
+            });//Close Show More Function
 
 
         });//Close Document Ready
 
-/*********************************************FUNCTIONS AREA**********************************************/
-        function OpenModal()
-        {
+        /*********************************************FUNCTIONS AREA**********************************************/
+        function OpenModal() {
             $("#myModal").modal();
             $("#EditRow").css("display", "none");
             $("#AddFarm").css("display", "inline");
@@ -269,8 +292,7 @@
             $SummerNote.code("");
         }//Opens the modal
 
-        function CloseModal()
-        {
+        function CloseModal() {
             $("#myModal").modal("hide");
         }//Closes the modal
 
@@ -280,15 +302,12 @@
             }
         }//Close Warning Message function
 
-        function Format(Data) {
+        function Format(Row) {
 
-            var Table = "<table><thead><tr><th>Parcel:</th><th>Plant Count</th></tr></thead><tbody>";
-            $.each(Data, function (index, obj) {
-                console.log("Esta entrando");
-                Table += "<tr><td>" + obj.Description + "</td>" + "<td>a</td>" + "</tr>";
+            var Table = "<table><thead><tr><th>Parcel:</th><th>Plant Count:</th></tr></thead><tbody>" + Row + "</tbody></table>";
 
-            });
-            return Table + "</tbody>" + "</table>";
+
+            return Table;
 
         }//Adds a format to the sent data
 
@@ -300,8 +319,9 @@
     </script>
     <style>
         #hidden {
-            display:none;
+            display: none;
         }
+
         #hidden2 {
             display: none;
         }
@@ -329,14 +349,11 @@
                     <label>Buttons</label>
                 </th>
             </tr>
-            <tbody>
-            </tbody>
+        <tbody></tbody>
         </thead>
     </table>
     <!------------------------------------------MAIN TABLE------------------------------------------>
-
-
-   <!------------------------------------------MODAL------------------------------------------>
+    <!------------------------------------------MODAL------------------------------------------>
     <div class="modal fade" id="myModal" role="dialog">
         <div class="modal-dialog">
 
@@ -347,7 +364,7 @@
                     <h4><span class="glyphicon glyphicon-add"></span> Add Farm Information :3</h4>
                 </div>
                 <div class="modal-body" id="modal-body" style="padding:40px 50px;">
-                    
+
                     <form role="form">
 
                         <div class="form-group">
@@ -361,8 +378,8 @@
                             <input type="text" class="form-control NewOne" id="Name" placeholder="Enter First Value">
                         </div>
                         <div class="form-group">
-                            <label for="usrname"><span class="glyphicon glyphicon-user"></span> Description</label> 
-                                <textarea id="Summernote"></textarea>                          
+                            <label for="usrname"><span class="glyphicon glyphicon-user"></span> Description</label>
+                            <textarea id="Summernote"></textarea>
                         </div>
                         <input type="text" id="hidden">
                     </form>
@@ -379,8 +396,6 @@
         </div>
     </div>
     <!------------------------------------------MODAL------------------------------------------>
-
-
     <!------------------------------------DELETE MODAL------------------------------------->
     <div class="modal fade" id="myDeleteModal" role="dialog">
         <div class="modal-dialog">
@@ -409,8 +424,6 @@
     </div>
 </body>
 </html>
-
-
 
 
 
