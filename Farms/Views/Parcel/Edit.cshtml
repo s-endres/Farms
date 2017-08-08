@@ -53,7 +53,7 @@
 
             $.ajax({
                 type: "GET",
-                url: "http://localhost:56892/Parcel/GetAllConditions",
+                url: "http://localhost:56892/Condition/GetAllConditions",
                 data: "",
                 dataType: "json",
                 contentType: 'application/json; charset=utf-8',
@@ -205,6 +205,7 @@
             $("#AddFarm").css("display", "inline");
             $("#Id").css("display", "none");
             $(".modal-content .form-control").not(".hidden").not(".hidden2").val("");
+            $("#modal-body").remove("alert-danger")
             $SummerNote2.code("");
         }//Opens the modal
         function CloseModal() {
@@ -212,7 +213,7 @@
         }//Closes the modal
         function WarningMessage() {
             if (!$('div[class="alert-danger"]').length) {
-                $("#myDT").prepend('<div class="alert alert-danger">< strong > Omaiga!</strong >Something went wrong >:O</div >');
+                $("#MainTable").prepend('<div class="alert alert-danger">< strong > Omaiga!</strong >Something went wrong >:O</div >');
             }
         }//Close Warning Message function
 

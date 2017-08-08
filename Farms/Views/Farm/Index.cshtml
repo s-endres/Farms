@@ -42,20 +42,20 @@
                 success: function (pData) {
 
 
-                    for (var i = 0; i < pData.length; i++) {
+                    //for (var i = 0; i < pData.length; i++) {
+                    //    pData[i].ShowMore = "<span class='glyphicon glyphicon-download' class='Shown'></span>";
+                    //    pData[i].Buttons = "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span> |" + " <span class='glyphicon glyphicon-unchecked'></span>";
+                    //}
 
-                        pData[i].ShowMore = "<span class='glyphicon glyphicon-download' class='Shown'>";
-                        pData[i].Buttons = "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span> |" + " <span class='glyphicon glyphicon-unchecked'></span>";
-                    }
                     $Table = $("#MainTable").DataTable({
                         "processing": true,
                         "data": pData,
                         "columns": [
-                            { "data": "ShowMore" },
+                            { "defaultContent": "<span class='glyphicon glyphicon-download' class='Shown'></span>"},
                             { "data": "Id" },
                             { "data": "Name" },
-                            { "data": "Description" },
-                            { "data": "Buttons" }
+                            { "data": "Description" },                            
+                            { "defaultContent": "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span> |" + " <span class='glyphicon glyphicon-unchecked'></span>" }
                         ],
                         responsive: true,
                         "columnDefs":
@@ -110,27 +110,25 @@
             });//Edit Function
 
             $("#AddFarm").click(function () {
+                if (ValidateTextArea() && ValidateForm()) {
                 $.ajax({
                     type: "POST",
                     url: "http://localhost:56892/Farm/AddFarm",
                     data: JSON.stringify({
-                        ShowMore: "<span class='glyphicon glyphicon-download' class='Shown'>",
                         Name: $("#Name").val(),
                         Description: $SummerNote.code(),
-                        Buttons: "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span> |" + " <span class='glyphicon glyphicon-unchecked'></span>"
+                        
                     }),
                     dataType: "json",
                     contentType: 'application/json; charset=utf-8',
                     success: function (pData) {
-                        var ObjPostData = {
-                            ShowMore: "<span class='glyphicon glyphicon-download' class='Shown'>",
+                        var ObjPostData = {                            
                             Id: pData.Id,
                             Name: $("#Name").val(),
                             Description: $SummerNote.code(),
-                            Buttons: "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span> |" + " <span class='glyphicon glyphicon-unchecked'></span>"
+                           
                         }
-                        //console.log(pData);
-                        //console.log(ObjPostData);
+                        
                         $Table
                             .row
                             .add(ObjPostData)
@@ -140,10 +138,15 @@
                     error: function () {
 
                     }
-                });//Close AJAX POST
+                    });//Close AJAX POST
+
+                }//Close Validation
+
             });//Close Add function
 
             $("tbody").on("click", ".glyphicon-ok-circle", function () {
+                $(".alert-danger").remove();
+                $(".NewOne").removeClass("Error");
                 $("#myModal").modal();
                 $("#AddFarm").css("display", "none");
                 $("#EditRow").css("display", "inline");
@@ -192,7 +195,7 @@
                         }
                         else {
                             if (!$('div[class="alert-danger"]').length) {
-                                $("#myDT").prepend('<div class="alert alert-danger">< strong > Omaiga!</strong >Failed deleting the row ToT</div >');
+                                $("#MainTable").prepend('<div class="alert alert-danger">< strong > Omaiga!</strong >Failed deleting the row ToT</div >');
                             }
                         }
                     },
@@ -286,12 +289,14 @@
 
         /*********************************************FUNCTIONS AREA**********************************************/
         function OpenModal() {
-            $("#myModal").modal();
+            $("#myModal").modal();           
             $("#EditRow").css("display", "none");
             $("#AddFarm").css("display", "inline");
             $("#Id").css("display", "none");
             $(".modal-content .form-control").not(".hidden").not(".hidden2").val("");
             $SummerNote.code("");
+            $(".IdDiv").css("display", "none");
+            $(".alert-danger").remove()
         }//Opens the modal
 
         function CloseModal() {
@@ -318,23 +323,22 @@
             $(pSelector).addClass(pAClass);
         }//Swaps the icon of the show more row
 
-        function ValidateForm(Zone) {
-            var Error = true;
-            $(Zone + " .NewOne").not("#hidden").each(function () {
-                if ($(this).val().trim() == "" || $(this).val() < 0) {
-                    $(this).addClass("Error");
+        function ValidateForm() {
+            var Error = true;           
+            if ($(".ClassName").val().trim() === "") {
+                $(".ClassName").addClass("Error");
                     Error = false;
                 }
                 else {
                     $(this).removeClass("Error");
                 }
-            });
+            
             return Error;
         }//Close Validation function
 
         function ValidateTextArea() {
-            if ($SummerNote.val().trim() == "") {
-                $(".table-bordered").prepend('<div class="alert alert-danger"><strong>Omaiga!</strong> You can insert a farm without a description >:v</div>');
+            if ($SummerNote.val().trim() === "") {
+                $(".ValidationModal").prepend('<div class="alert alert-danger"><strong>Omaiga!</strong> You can insert a farm without a description >:v</div>');
                 return false;
             }
             return true;
@@ -390,11 +394,11 @@
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                     <h4><span class="glyphicon glyphicon-add"></span> Add Farm Information :3</h4>
                 </div>
-                <div class="modal-body" id="modal-body" style="padding:40px 50px;">
+                <div class="modal-body ValidationModal" id="modal-body" style="padding:40px 50px;">
 
                     <form role="form">
 
-                        <div class="form-group">
+                        <div class="form-group IdDiv">
                             <label for="usrname"><span class="glyphicon glyphicon-user"></span> Id</label>
                             <input type="text" class="form-control NewOne" id="Id" readonly>
                         </div>
@@ -402,7 +406,7 @@
 
                         <div class="form-group">
                             <label for="usrname"><span class="glyphicon glyphicon-user"></span> Name</label>
-                            <input type="text" class="form-control NewOne" id="Name" placeholder="Enter First Value">
+                            <input type="text" class="form-control ClassName" id="Name" placeholder="Enter First Value">
                         </div>
                         <div class="form-group">
                             <label for="usrname"><span class="glyphicon glyphicon-user"></span> Description</label>

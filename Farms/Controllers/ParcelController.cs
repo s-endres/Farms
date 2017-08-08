@@ -30,11 +30,7 @@ namespace Farms.Controllers
             return Json(ParcelData.ParcelList.Where(p => p.IdFarm == farmId), JsonRequestBehavior.AllowGet);
         }
 
-        [HttpGet]
-        public JsonResult GetAllConditions()
-        {
-            return Json(ParcelData.ConditionList, JsonRequestBehavior.AllowGet);
-        }
+      
 
 
         [HttpPost]

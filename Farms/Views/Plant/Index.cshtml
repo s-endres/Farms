@@ -39,7 +39,7 @@
                 return results[1] || 0;
             }
             var ParcelObject = { parcelId: $.urlParam("parcelId") };
-
+            
             $("#EditRow").click(function () {
 
 
@@ -53,37 +53,37 @@
                     Buttons: "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span>"
                 };
                 if (ValidateModal() && ValidateSelect() && ValidateTextAreaModal && ValidateModalDate()) {
-                $.ajax({
-                    type: "PUT",
-                    url: "http://localhost:56892/Plant/UpdatePlant",
-                    data: JSON.stringify(ObjEdit),
-                    dataType: "json",
-                    contentType: 'application/json; charset=utf-8',
-                    success: function (pData) {
-                        $.get("http://localhost:56892/Plant/GetTypePlantById", { plantTypeId: pData.PlantType }, function (PData) {
-                            console.log(PData);
-                            ObjEdit.Planttype = PData.Name;
+                    $.ajax({
+                        type: "PUT",
+                        url: "http://localhost:56892/Plant/UpdatePlant",
+                        data: JSON.stringify(ObjEdit),
+                        dataType: "json",
+                        contentType: 'application/json; charset=utf-8',
+                        success: function (pData) {
+                            $.get("http://localhost:56892/PlantType/GetTypePlantById", { plantTypeId: pData.PlantType }, function (PData) {
+                                console.log(PData);
+                                ObjEdit.Planttype = PData.Name;
 
-                        });
-                        $Table
-                            .row($("#hidden").val())
-                            .data(ObjEdit)
-                            .draw();
-                        CloseModal();
+                            });
+                            $Table
+                                .row($("#hidden").val())
+                                .data(ObjEdit)
+                                .draw();
+                            CloseModal();
 
 
-                    },
-                    error: function () {
-                        console.log("Jaja Salu2");
-                        WarningMessage();
-                    }
-                });//Close AJAX PUT For Edit
+                        },
+                        error: function () {
+                            console.log("Jaja Salu2");
+                            WarningMessage();
+                        }
+                    });//Close AJAX PUT For Edit
                 }
             });//Edit Function
 
             $.ajax({
                 type: "GET",
-                url: "http://localhost:56892/Plant/GetAllPlantTypes",
+                url: "http://localhost:56892/PlantType/GetAllPlantTypes",
                 data: "",
                 dataType: "json",
                 contentType: 'application/json; charset=utf-8',
@@ -117,14 +117,11 @@
                 success: function (pData) {
                     $.ajax({ async: false });
                     for (var i = 0; i < pData.length; i++) {
-                        $.get("http://localhost:56892/Plant/GetTypePlantById", { plantTypeId: pData[i].PlantType }, function (PData) {
+                        $.get("http://localhost:56892/PlantType/GetTypePlantById", { plantTypeId: pData[i].PlantType }, function (PData) {
                             console.log(PData);
                             pData[i].Planttype = PData.Name;
-                           
-                        });
-                        
-                        pData[i].ShowMore = "<span class='glyphicon glyphicon-download' class='Shown'>";
-                        pData[i].Buttons = "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span>";
+
+                        });      
                     }
                     $Table = $("#MainTable").DataTable({
                         "processing": true,
@@ -136,7 +133,7 @@
                             { "data": "Description" },
                             { "data": "PlantedDate" },
                             { "data": "Planttype" },
-                            { "data": "Buttons" }
+                            { "defaultContent": "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span> |" + " <span class='glyphicon glyphicon-unchecked'></span>" }
                         ],
                         responsive: true,
                         "columnDefs":
@@ -209,53 +206,56 @@
                         WarningMessage();
                     }
                 });//Close Delete Ajax
+
             })//Confirmation Modal Delete;
 
             $("#NoDelete").click(function () {
+
                 $("#myDeleteModal").modal("hide");
+
             });//Confirmation Modal
 
             $("#AddPlant").click(function () {
                 if (ValidateModal() && ValidateSelect() && ValidateTextAreaModal() && ValidateModalDate()) {
-                   
-                $.ajax({
-                    type: "POST",
-                    url: "http://localhost:56892/Plant/AddPlant",
-                    data: JSON.stringify({
-                        Name: $("#Name").val(),
-                        Description: $SummerNote.code(),
-                        PlantedDate: $("#PlantedDate").val(),
-                        PlantType: $("#PlantType").val(),
-                        Buttons: "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span>"
-                    }),
-                    dataType: "json",
-                    contentType: 'application/json; charset=utf-8',
-                    success: function (pData) {
-                        console.log(pData.Id);
-                        var ObjPostData = {
-                            Id: pData.Id,
+
+                    $.ajax({
+                        type: "POST",
+                        url: "http://localhost:56892/Plant/AddPlant",
+                        data: JSON.stringify({
                             Name: $("#Name").val(),
                             Description: $SummerNote.code(),
                             PlantedDate: $("#PlantedDate").val(),
                             PlantType: $("#SelectPlantType").val(),
-                            Buttons: "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span>"
+                            IdParcel: $.urlParam("parcelId")
+                        }),
+                        dataType: "json",
+                        contentType: 'application/json; charset=utf-8',
+                        success: function (pData) {
+                            console.log(pData.Id);
+                            var ObjPostData = {
+                                Id: pData.Id,
+                                Name: $("#Name").val(),
+                                Description: $SummerNote.code(),
+                                PlantedDate: $("#PlantedDate").val(),
+                                PlantType: $("#SelectPlantType").val(),
+                                IdParcel: "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span>"
+                            }
+                            $.get("http://localhost:56892/PlantType/GetTypePlantById", { plantTypeId: ObjPostData.PlantType }, function (PData) {
+                                console.log(PData);
+                                ObjPostData.Planttype = PData.Name;
+
+                            });
+                            console.log(ObjPostData);
+                            $Table
+                                .row
+                                .add(ObjPostData)
+                                .draw();
+                            CloseModal();
+                        },
+                        error: function () {
+
                         }
-                        $.get("http://localhost:56892/Plant/GetTypePlantById", { plantTypeId: ObjPostData.PlantType }, function (PData) {
-                            console.log(PData);
-                            ObjPostData.Planttype = PData.Name;
-
-                        });
-                        console.log(ObjPostData);
-                        $Table
-                            .row
-                            .add(ObjPostData)
-                            .draw();
-                        CloseModal();
-                    },
-                    error: function () {
-
-                    }
-                });//Close AJAX POST
+                    });//Close AJAX POST
                 }
             });//Close Add function
 
@@ -272,14 +272,17 @@
             $SummerNote.code("");
             $(".HideId").css("display", "none");
         }//Opens the modal
+
         function CloseModal() {
             $("#myModal").modal("hide");
         }//Closes the modal
+
         function WarningMessage() {
             if (!$('div[class="alert-danger"]').length) {
                 $("#MaintTable").prepend('<div class="alert alert-danger">< strong > Omaiga!</strong >Something went wrong >:O</div >');
             }
         }//Close Warning Message function
+
         function ValidateTextAreaModal() {
             if ($SummerNote.code() === "<p><br></p>" || $SummerNote.code() === "") {
                 $(".ValidationModal").prepend('<div class="alert alert-danger"><strong>Omaiga!</strong> You can create a Farm without description >:3</div>');
@@ -301,6 +304,7 @@
             }
             return Error;
         }
+
         function ValidateModalDate() {
             var Error = true;
 
@@ -314,6 +318,7 @@
             }
             return Error;
         }//Close Validation function
+
         function ValidateSelect() {
             if ($("#SelectPlantType").val() == null) {
                 $(".Form-Class").prepend('<div class="alert alert-danger"><strong>Omaiga!</strong> You can insert a plant without a Type >:o </div>');
