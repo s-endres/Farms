@@ -76,16 +76,7 @@ namespace Farms.Controllers
         {
             return Json(PlantData.PlantList.Where(p => p.IdParcel == parcelId), JsonRequestBehavior.AllowGet);
         }
-        [HttpGet]
-        public JsonResult GetAllPlantTypes()
-        {
-            return Json(PlantData.PlantTypeList, JsonRequestBehavior.AllowGet);
-        }
-        [HttpGet]
-        public JsonResult GetTypePlantById(int plantTypeId)
-        {
-            return Json(PlantData.PlantTypeList.Where(p=>p.Id == plantTypeId).FirstOrDefault(), JsonRequestBehavior.AllowGet);
-        }
+       
 
         [HttpGet]
         public JsonResult GetParcelByTypeAndCount(int parcelId)

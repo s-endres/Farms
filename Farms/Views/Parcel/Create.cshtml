@@ -26,7 +26,7 @@
             return results[1] || 0;
         }
 
-        $.get('http://localhost:56892/Parcel/GetAllConditions', function (data) {
+        $.get('http://localhost:56892/Condition/GetAllConditions', function (data) {
             $.each(data, function () {
                 $("#Conditions").append("<option value='" + this.Id + "'>" + this.Name + "</option>");
             });

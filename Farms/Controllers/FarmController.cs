@@ -59,7 +59,7 @@ namespace Farms.Controllers
         [HttpPut]
         public JsonResult UpdateFarm([Bind(Include = "Id,Name,Description")] Farm farm)
         {
-            if (farm.Id != null)
+            if (farm.Id != 0)
             {
                 var foundFarm = FarmData.FarmList.Where(s => s.Id == farm.Id).FirstOrDefault();
                 foundFarm.Name = farm.Name;

@@ -36,7 +36,7 @@
             $.each(data, function () {
                 var currentPlant = this;
                 $.ajaxSetup({ async: false });
-                $.get('http://localhost:56892/Plant/GetTypePlantById?plantTypeId=' + currentPlant.PlantType, function (dataType) {
+                $.get('http://localhost:56892/PlantType/GetTypePlantById?plantTypeId=' + currentPlant.PlantType, function (dataType) {
                     currentPlant.PlantName = dataType.Name;
                     //currentPlant.PlantType = dataType.Name;
                 });
@@ -48,7 +48,7 @@
 
         $.ajax({
             type: "GET",
-            url: "http://localhost:56892/Plant/GetAllPlantTypes",
+            url: "http://localhost:56892/PlantType/GetAllPlantTypes",
             data: "",
             dataType: "json",
             contentType: 'application/json; charset=utf-8',
@@ -210,7 +210,7 @@
                     if (data) {
                         $("#myModal").modal('toggle');
                         $.ajaxSetup({ async: false });
-                        $.get('http://localhost:56892/Plant/GetTypePlantById?plantTypeId=' + data.PlantType, function (dataType) {
+                        $.get('http://localhost:56892/PlantType/GetTypePlantById?plantTypeId=' + data.PlantType, function (dataType) {
                             data.PlantName = dataType.Name;
                         });
                         $DTable.row.add(data).draw();
@@ -244,7 +244,7 @@
                         $("#myModal").modal('toggle');
                         var dtIndex = $("#hiddenModalInput").val();
                         $.ajaxSetup({ async: false });
-                        $.get('http://localhost:56892/Plant/GetTypePlantById?plantTypeId=' + data.PlantType, function (dataType) {
+                        $.get('http://localhost:56892/PlantType/GetTypePlantById?plantTypeId=' + data.PlantType, function (dataType) {
                             data.PlantName = dataType.Name;
                         });
                         $DTable.row(dtIndex).data(data).draw();
