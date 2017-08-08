@@ -85,6 +85,42 @@
                 }
             });//Close AJAX GET
 
+            $("#MainTable tbody").on("click", ".glyphicon-download,.glyphicon-upload", function () {
+                var RClass = "glyphicon-download";
+                var AClass = "glyphicon-upload";
+
+                var Tr = $(this).closest("tr");/**HTML Row**/
+                var row = $Table.row(Tr);/**DataTable Row**/
+                var Index = $Table.row(row).index();
+                var ParcelObject = { parcelId: row.data().Id };
+                console.log(ParcelObject);
+                if (row.child.isShown()) {
+                    ShowLogo(this, AClass, RClass);
+                    row.child.hide();
+                    Tr.removeClass('shown');
+                }
+                else {
+                   
+
+                    $.ajax({
+                        type: "GET",
+                        url: "http://localhost:56892/Plant/GetParcelByTypeAndCount",
+                        data: ParcelObject,
+                        dataType: "json",
+                        contentType: 'application/json; charset=utf-8',
+                        success: function (pData) {
+                            console.log(pData);
+                            row.child(Format(pData)).show();
+                            
+                        },
+                        error: function () {
+                            WarningMessage();
+                        }
+
+                    });//Close AJAX GET
+                    ShowLogo(this, RClass, AClass);
+                }
+            });
 
 
             $("tbody").on("click", ".glyphicon-ok-circle", function () {
@@ -140,6 +176,8 @@
 
             });
 
+
+
         });//Close Document Ready
 
         /*********************************************FUNCTIONS AREA**********************************************/
@@ -159,7 +197,20 @@
                 $("#myDT").prepend('<div class="alert alert-danger">< strong > Omaiga!</strong >Something went wrong >:O</div >');
             }
         }//Close Warning Message function
+        function ShowLogo(pSelector, pRClass, pAClass) {
+            $(pSelector).removeClass(pRClass);
+            $(pSelector).addClass(pAClass);
+        }//Swaps the icon of the show more row
+        function Format(Data) {
 
+            var Table = "<table><thead><tr><th>Plant Type:</th><th>Count</th></tr></thead><tbody>";
+            $.each(Data, function (index, obj) {
+
+                Table += "<tr><td>" + obj.type + "</td>" + "<td>" + obj.count + "</td></tr>";
+
+            });
+            return Table + "</tbody>" + "</table>";
+        }//Adds a format to the sent data
     </script>
     <style>
         #hidden {

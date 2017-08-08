@@ -44,12 +44,12 @@
 
 
                 ObjEdit = {
-                    
+
                     Id: $("#Id").val(),
                     Name: $("#Name").val(),
                     Description: $SummerNote.code(),
                     PlantedDate: $("#PlantedDate").val(),
-                    PlantType: $("#PlantType").val(),
+                    PlantType: $("#SelectPlantType").val(),
                     Buttons: "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span>"
                 };
                 $.ajax({
@@ -59,6 +59,11 @@
                     dataType: "json",
                     contentType: 'application/json; charset=utf-8',
                     success: function (pData) {
+                        $.get("http://localhost:56892/Plant/GetTypePlantById", { plantTypeId: pData.PlantType }, function (PData) {
+                            console.log(PData);
+                            ObjEdit.Planttype = PData.Name;
+
+                        });
                         $Table
                             .row($("#hidden").val())
                             .data(ObjEdit)
@@ -74,7 +79,33 @@
                 });//Close AJAX PUT For Edit
             });//Edit Function
 
+            $.ajax({
+                type: "GET",
+                url: "http://localhost:56892/Plant/GetAllPlantTypes",
+                data: "",
+                dataType: "json",
+                contentType: 'application/json; charset=utf-8',
+                success: function (pData) {
+                    if (pData) {
+                        $.each(pData, function () {
 
+                            $("#SelectPlantType").append('<option value="' + this.Id + '">' + this.Name + '</option>');
+                        })
+                    }
+                    else {
+
+                        if (!$('div[class="alert-danger"]').length) {
+                            $(".form-group").prepend('<div class="alert alert-danger"><strong>Omaiga!</strong>Something went wrong</div>');
+                        }
+                    }
+
+                },
+                error: function () {
+                    WarningMessage();
+                }
+            });//Close AJAX GET Types
+
+            $.ajaxSetup({ async: false });
             $.ajax({
                 type: "GET",
                 url: "http://localhost:56892/Plant/GetAllPlantsByParcelId",
@@ -82,10 +113,14 @@
                 dataType: "json",
                 contentType: 'application/json; charset=utf-8',
                 success: function (pData) {
-
-
+                    $.ajax({ async: false });
                     for (var i = 0; i < pData.length; i++) {
-
+                        $.get("http://localhost:56892/Plant/GetTypePlantById", { plantTypeId: pData[i].PlantType }, function (PData) {
+                            console.log(PData);
+                            pData[i].Planttype = PData.Name;
+                           
+                        });
+                        
                         pData[i].ShowMore = "<span class='glyphicon glyphicon-download' class='Shown'>";
                         pData[i].Buttons = "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span>";
                     }
@@ -98,7 +133,7 @@
                             { "data": "Name" },
                             { "data": "Description" },
                             { "data": "PlantedDate" },
-                            { "data": "PlantType" },
+                            { "data": "Planttype" },
                             { "data": "Buttons" }
                         ],
                         responsive: true,
@@ -119,6 +154,8 @@
                 }
             });//Close AJAX GET
 
+
+
             $("tbody").on("click", ".glyphicon-ok-circle", function () {
                 $("#myModal").modal();
                 $("#AddPlant").css("display", "none");
@@ -135,7 +172,7 @@
                 $("#PlantType").val(Data.PlantType);
                 $("#hidden").val(Index);
 
-            });//Opens the edit Modal        
+            });//Opens the edit Modal
 
             $("tbody").on("click", ".glyphicon-remove-circle", function () {
                 var Row = $(this).parents("tr");
@@ -191,14 +228,20 @@
                     dataType: "json",
                     contentType: 'application/json; charset=utf-8',
                     success: function (pData) {
+
                         var ObjPostData = {
                             Id: pData.Id,
                             Name: $("#Name").val(),
                             Description: $SummerNote.code(),
                             PlantedDate: $("#PlantedDate").val(),
-                            PlantType: $("#PlantType").val(),
+                            PlantType: $("#SelectPlantType").val(),
                             Buttons: "<span class='glyphicon glyphicon-remove-circle'></span> |" + " <span class='glyphicon glyphicon-ok-circle'></span>"
                         }
+                        $.get("http://localhost:56892/Plant/GetTypePlantById", { plantTypeId: ObjPostData.PlantType }, function (PData) {
+                            console.log(PData);
+                            ObjPostData.Planttype = PData.Name;
+
+                        });
                         console.log(ObjPostData);
                         $Table
                             .row
@@ -230,9 +273,10 @@
         }//Closes the modal
         function WarningMessage() {
             if (!$('div[class="alert-danger"]').length) {
-                $("#myDT").prepend('<div class="alert alert-danger">< strong > Omaiga!</strong >Something went wrong >:O</div >');
+                $("#MaintTable").prepend('<div class="alert alert-danger">< strong > Omaiga!</strong >Something went wrong >:O</div >');
             }
         }//Close Warning Message function
+
 
     </script>
     <style>
@@ -278,8 +322,6 @@
         </thead>
     </table>
     <!------------------------------------------MAIN TABLE------------------------------------------>
-
-
     <!------------------------------------------MODAL------------------------------------------>
     <div class="modal fade" id="myModal" role="dialog">
         <div class="modal-dialog">
@@ -312,7 +354,7 @@
                         </div>
                         <div class="form-group">
                             <label for="usrname"><span class="glyphicon glyphicon-user"></span> Plant Type</label>
-                            <input type="text" class="form-control NewOne" id="PlantType">
+                            <select class="form-control NewOne" id="SelectPlantType"></select>
                         </div>
 
                         <input type="text" id="hidden">
