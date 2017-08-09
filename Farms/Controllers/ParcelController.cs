@@ -30,19 +30,11 @@ namespace Farms.Controllers
             return Json(ParcelData.ParcelList.Where(p => p.IdFarm == farmId), JsonRequestBehavior.AllowGet);
         }
 
-        [HttpGet]
-        public JsonResult GetAllConditions()
-        {
-            return Json(ParcelData.ConditionList, JsonRequestBehavior.AllowGet);
-        }
-
-
         [HttpPost]
         public JsonResult AddParcel([Bind(Include = "Size,Description,IdFarm,Observations,ConditionIds")] Parcel parcel)
         {
             if (!string.IsNullOrEmpty(parcel.Size.ToString()) && !string.IsNullOrEmpty(parcel.Description) && parcel.Observations.Count > 0)
             {
-                parcel.PlantIds = new List<int>();
                 var last = ParcelData.ParcelList.Last();
                 parcel.Id = last.Id + 1;
                 ParcelData.ParcelList.Add(parcel);
@@ -82,7 +74,12 @@ namespace Farms.Controllers
         {
             try
             {
+                var plantList = PlantData.PlantList.Where(f => f.IdParcel == parcelId).ToList();
                 var parcel = ParcelData.ParcelList.Where(f => f.Id == parcelId).FirstOrDefault();
+                foreach(var plant in plantList)
+                {
+                    PlantData.PlantList.Remove(plant);
+                }
                 ParcelData.ParcelList.Remove(parcel);
                 return Json(true, JsonRequestBehavior.AllowGet);
             }
