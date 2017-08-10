@@ -2,4 +2,186 @@
 @{
     ViewBag.Title = "Parcel";
 }
-<h2>Parcel</h2>
+
+<!-- DataTables CSS -->
+<link href="/bower_components/datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.css" rel="stylesheet">
+<!-- DataTables Responsive CSS -->
+<link href="/bower_components/datatables-responsive/css/dataTables.responsive.css" rel="stylesheet">
+<!-- Custom Fonts -->
+<link href="/bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+<!-- DataTables JavaScript -->
+<script src="/bower_components/datatables/media/js/jquery.dataTables.min.js"></script>
+<script src="/bower_components/datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.min.js"></script>
+<!-- CSS -->
+<link href="~/Content/Site.css" rel="stylesheet" />
+<!-- Basic methods -->
+<script src="~/Scripts/Basics methods.js"></script>
+
+<h2 id="Title"></h2>
+
+<table id="table" class="table table-responsive">
+    <thead>
+        <tr>
+            <th>Details</th>
+            <th>Id</th>
+            <th>Size</th>
+            <th>Description</th>
+            <th>Options</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<!-- Delete modal -->
+<div class="modal fade" id="DeleteModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myDeleteLabel">Do you really want to delete this entry?</h4>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <input id="IdDeleter" type="hidden" class="form-control" placeholder="First entry">
+                    </div>
+                </form>
+                <button id="DeleteBtn" class="btn btn-danger In-Line Float-Right" onclick="RemoveParcel()">Delete</button>
+                <button id="CancelBtn" class="btn btn-default In-Line" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+
+        $.urlParam = function (name) {
+            var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+            if (results == null) {
+                return null;
+            }
+            else {
+                return results[1] || -1;
+            }
+        }
+        $FarmId = $.urlParam("FarmId");
+
+        // initializes the DataTable with content
+        if (isNaN($FarmId) || $FarmId == -1 || !$.isNumeric($FarmId)) {
+            window.location.replace("http://localhost:56892/Farm/Index");
+        } else {
+            $.ajax({
+                url: 'http://localhost:56892/Parcel/GetAllParcelByFarmId',
+                type: 'GET',
+                data: { "farmId": $FarmId },
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    $table = $("#table").DataTable({
+                        responsive: true,
+                        data: data,
+                        "order": [[1, "asc"]],
+                        "columnDefs": [{
+                            "targets": [0, 4],
+                            "orderable": false
+                        }],
+                        "columns": [
+                            { "defaultContent": "<span class='glyphicon glyphicon-chevron-down'></span>" },
+                            { "data": "Id" },
+                            { "data": "Size" },
+                            { "data": "Description" },
+                            {
+                                "defaultContent":
+                                "<span class='glyphicon glyphicon-edit'></span> " +
+                                "<span class='glyphicon glyphicon-eye-open'></span> " +
+                                "<span class='glyphicon glyphicon-trash' data-toggle='modal' data-target='#DeleteModal'></span>"
+                            }
+                        ]
+                    });
+                },
+                error: function () {
+                    console.error("ERROR");
+                }
+            });
+
+            $.ajax({
+                url: 'http://localhost:56892/Farm/getFarm',
+                type: 'GET',
+                data: { "farmId": $FarmId },
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    $("#Title").html(data.Name + ' - Parcels <span class="glyphicon glyphicon-plus-sign"></span>');
+                },
+                error: function () {
+                    console.error("ERROR");
+                }
+            });
+        }
+
+        // Event to show details table
+        $("#table tbody").on('click', '.glyphicon-chevron-down, .glyphicon-chevron-up', function () {
+            ShowHide($(this).parents('tr'), false);
+            if ($(this).hasClass("glyphicon-chevron-up"))
+                addAndRemoveClassByIdElem($(this), "glyphicon-chevron-down", "glyphicon-chevron-up");
+            else
+                addAndRemoveClassByIdElem($(this), "glyphicon-chevron-up", "glyphicon-chevron-down");
+        });
+
+        // Event to delete the parcel
+        $("#table tbody").on('click', '.glyphicon-trash', function () {
+            ModifyDeleteModal($table.row($(this).parents('tr')).index());
+        });
+
+        // Event to edit the Parcel
+        $("#table tbody").on('click', '.glyphicon-edit', function () {
+            window.location.replace("http://localhost:56892/Parcel/Edit?ParcelId=" + $table.row($(this).parents('tr')).data().Id);
+        });
+
+        // Event to the index of plants
+        $("#table tbody").on('click', '.glyphicon-eye-open', function () {
+            window.location.replace("http://localhost:56892/Plant/Index?ParcelId=" + $table.row($(this).parents('tr')).data().Id);
+        });
+
+        // Event to create parcels
+        $("#Title").on('click', '.glyphicon-plus-sign', function () {
+            window.location.replace("http://localhost:56892/Parcel/Create?FarmId=" + $FarmId);
+        });
+    });
+
+    function ExtractInfo(Data) {
+        return "" +
+            "<table class='table table-responsive ChildTable' style='background-color: transparent'>" +
+            "<thead>" +
+            "<tr>" +
+            "<th>Type</th>" +
+            "<th>Count</th>" +
+            "</tr>" +
+            "</thead>" +
+            "<tbody>" +
+            "</tbody>" +
+            "</table>";
+    }
+
+    function RemoveParcel() {
+        if ($("#IdDeleter").val().trim() != null) {
+
+            var index = parseInt($("#IdDeleter").val());
+
+            $.ajax({
+                url: 'http://localhost:56892/Parcel/RemoveParcel',
+                type: 'DELETE',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({ "parcelId": $table.row(index).data().Id }),
+                success: function (data) {
+                    $table.row(index).remove().draw();
+
+                    $('#DeleteModal').modal('toggle');
+                    $('body').removeClass('modal-open');
+                },
+                error: function (data) {
+                    console.error("ERROR");
+                }
+            });
+        }
+    }
+</script>

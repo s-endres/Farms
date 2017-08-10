@@ -17,6 +17,8 @@
 <link href="~/bower_components/summernote/css/summernote.css" rel="stylesheet" />
 <!-- CSS -->
 <link href="~/Content/Site.css" rel="stylesheet" />
+<!-- Basic methods -->
+<script src="~/Scripts/Basics methods.js"></script>
 
 <h2 id="Title">Farms <span class="glyphicon glyphicon-plus-sign" onclick="ModifyModal(false, -1)" data-toggle="modal" data-target="#CreateModal"></span></h2>
 
@@ -58,7 +60,7 @@
                     </div>
                 </form>
                 <button id="CreateBtn" class="btn btn-primary" onclick="AddFarm()">Create</button>
-                <button id="EditBtn" class="btn btn-primary" onclick="EditElement()">Edit</button>
+                <button id="EditBtn" class="btn btn-primary" onclick="EditFarm()">Edit</button>
             </div>
         </div>
     </div>
@@ -112,8 +114,8 @@
                         { "data": "Name" },
                         { "data": "Description" },
                         {
-                            "defaultContent": "<span class='glyphicon glyphicon-edit'></span> " +
-                            "<span class='glyphicon glyphicon-eye-open' data-toggle='modal' data-target='#CreateModal'></span> " +
+                            "defaultContent": "<span class='glyphicon glyphicon-edit' data-toggle='modal' data-target='#CreateModal'></span> " +
+                            "<span class='glyphicon glyphicon-eye-open'></span> " +
                             "<span class='glyphicon glyphicon-trash' data-toggle='modal' data-target='#DeleteModal'></span>"
                         }
                     ]
@@ -124,13 +126,14 @@
             }
         });
 
+        // initializes the summernote
         $SummerNoteInput = $("#DescriptionInput").summernote({
             height: 300                 // set editor height
         });
 
         // Event to show details table
         $("#table tbody").on('click', '.glyphicon-chevron-down, .glyphicon-chevron-up', function () {
-            ShowHide($(this).parents('tr'));
+            ShowHide($(this).parents('tr'), false);
             if ($(this).hasClass("glyphicon-chevron-up"))
                 addAndRemoveClassByIdElem($(this), "glyphicon-chevron-down", "glyphicon-chevron-up");
             else
@@ -141,25 +144,22 @@
         $("#table tbody").on('click', '.glyphicon-trash', function () {
             ModifyDeleteModal($table.row($(this).parents('tr')).index());
         });
+
+        // Event to edit the farm
+        $("#table tbody").on('click', '.glyphicon-edit', function () {
+            ModifyModal(true, $table.row($(this).parents('tr')).index());
+
+            addAndRemoveClassByIdElem($(this).parents('tr').children().children("span.glyphicon-chevron-up"), "glyphicon-chevron-down", "glyphicon-minus-sign");
+            ShowHide($(this).parents('tr'), true);
+        });
+
+        // Event to the index of parcels
+        $("#table tbody").on('click', '.glyphicon-eye-open', function () {
+
+            window.location.replace("http://localhost:56892/Parcel/Index?FarmId=" + $table.row($(this).parents('tr')).data().Id);
+            
+        });
     });
-
-    function addAndRemoveClassByIdElem(elementIdentifier, classToAdd, classToRemove) {
-        $(elementIdentifier).addClass(classToAdd).removeClass(classToRemove);
-    }
-
-    function ShowHide(tr) {
-        var row = $table.row(tr);
-
-        if (row.child.isShown()) {
-            //Child is opened, so close it
-            row.child.hide();
-            tr.removeClass("shown");
-        } else {
-            //Child is closed, so open it
-            row.child(ExtractInfo()).show();
-            tr.addClass("shown");
-        }
-    }
 
     function ExtractInfo(Data) {
         return "" +
@@ -211,6 +211,7 @@
 
             // Removes the values
             $("#Formulario input").val("");
+            $SummerNoteInput.code("");
 
 
             $("#myModalLabel").text("Create a new farm");
@@ -262,10 +263,6 @@
         }
     }
 
-    function ModifyDeleteModal(index) {
-        $("#IdDeleter").val(index);
-    }
-
     function RemoveFarm() {
         if ($("#IdDeleter").val().trim() != null) {
 
@@ -280,6 +277,36 @@
                     $table.row(index).remove().draw();
 
                     $('#DeleteModal').modal('toggle');
+                    $('body').removeClass('modal-open');
+                },
+                error: function (data) {
+                    console.error("ERROR");
+                }
+            });
+        }
+    }
+
+    function EditFarm() {
+        if (validate()) {
+
+            var idTable = $("#IdContainer").val();
+            var FarmData = $table.row(idTable).data();
+            
+            var Farm = {
+                "Id": parseInt(FarmData.Id),
+                "Name": $("#NameInput").val(),
+                "Description": $SummerNoteInput.code()
+            };
+            
+            $.ajax({
+                url: 'http://localhost:56892/Farm/UpdateFarm',
+                type: 'PUT',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(Farm),
+                success: function (data) {
+                    $table.row(idTable).data(Farm).draw();
+
+                    $('#CreateModal').modal('toggle');
                     $('body').removeClass('modal-open');
                 },
                 error: function (data) {
