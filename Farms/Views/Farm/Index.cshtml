@@ -3,4 +3,289 @@
     ViewBag.Title = "Farms";
 }
 
-<h2>Farms</h2>
+<!-- DataTables CSS -->
+<link href="/bower_components/datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.css" rel="stylesheet">
+<!-- DataTables Responsive CSS -->
+<link href="/bower_components/datatables-responsive/css/dataTables.responsive.css" rel="stylesheet">
+<!-- Custom Fonts -->
+<link href="/bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+<!-- DataTables JavaScript -->
+<script src="/bower_components/datatables/media/js/jquery.dataTables.min.js"></script>
+<script src="/bower_components/datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.min.js"></script>
+<!-- WYSIWYG -->
+<script src="~/bower_components/summernote/js/summernote.min.js"></script>
+<link href="~/bower_components/summernote/css/summernote.css" rel="stylesheet" />
+<!-- CSS -->
+<link href="~/Content/Site.css" rel="stylesheet" />
+
+<h2 id="Title">Farms <span class="glyphicon glyphicon-plus-sign" onclick="ModifyModal(false, -1)" data-toggle="modal" data-target="#CreateModal"></span></h2>
+
+<table id="table" class="table table-responsive">
+    <thead>
+        <tr>
+            <th>Details</th>
+            <th>Id</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Options</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+
+<!-- Modals -->
+<!-- Add modal -->
+<div class="modal fade" id="CreateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Add a new entry</h4>
+            </div>
+            <div class="modal-body">
+                <form id="Formulario">
+                    <div class="form-group">
+                        <input id="IdContainer" type="hidden" class="form-control" placeholder="First entry">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label" for="FirstAdd">Farm's name:</label>
+                        <input id="NameInput" type="text" class="form-control" placeholder="Enter the farm's name">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label" for="SecondAdd">Description:</label>
+                        <textarea id="DescriptionInput" class="form-control" placeholder="Describe the farm"></textarea>
+                    </div>
+                </form>
+                <button id="CreateBtn" class="btn btn-primary" onclick="AddFarm()">Create</button>
+                <button id="EditBtn" class="btn btn-primary" onclick="EditElement()">Edit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete modal -->
+<div class="modal fade" id="DeleteModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myDeleteLabel">Do you really want to delete this entry?</h4>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <input id="IdDeleter" type="hidden" class="form-control" placeholder="First entry">
+                    </div>
+                </form>
+                <button id="DeleteBtn" class="btn btn-danger In-Line Float-Right" onclick="RemoveFarm()">Delete</button>
+                <button id="CancelBtn" class="btn btn-default In-Line" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+<script>
+    $(document).ready(function () {
+        // initializes the DataTable with content
+        $.ajax({
+            url: 'http://localhost:56892/Farm/GetAllFarms',
+            type: 'GET',
+            contentType: 'application/json; charset=utf-8',
+            success: function (data) {
+                $table = $("#table").DataTable({
+                    responsive: true,
+                    data: data,
+                    "order": [[1, "asc"]],
+                    "columnDefs": [{
+                        "targets": [0, 4],
+                        "orderable": false
+                    }],
+                    "columns": [
+                        { "defaultContent": "<span class='glyphicon glyphicon-chevron-down'></span>" },
+                        { "data": "Id" },
+                        { "data": "Name" },
+                        { "data": "Description" },
+                        {
+                            "defaultContent": "<span class='glyphicon glyphicon-edit'></span> " +
+                            "<span class='glyphicon glyphicon-eye-open' data-toggle='modal' data-target='#CreateModal'></span> " +
+                            "<span class='glyphicon glyphicon-trash' data-toggle='modal' data-target='#DeleteModal'></span>"
+                        }
+                    ]
+                });
+            },
+            error: function () {
+                console.error("ERROR");
+            }
+        });
+
+        $SummerNoteInput = $("#DescriptionInput").summernote({
+            height: 300                 // set editor height
+        });
+
+        // Event to show details table
+        $("#table tbody").on('click', '.glyphicon-chevron-down, .glyphicon-chevron-up', function () {
+            ShowHide($(this).parents('tr'));
+            if ($(this).hasClass("glyphicon-chevron-up"))
+                addAndRemoveClassByIdElem($(this), "glyphicon-chevron-down", "glyphicon-chevron-up");
+            else
+                addAndRemoveClassByIdElem($(this), "glyphicon-chevron-up", "glyphicon-chevron-down");
+        });
+
+        // Event to delete the farm
+        $("#table tbody").on('click', '.glyphicon-trash', function () {
+            ModifyDeleteModal($table.row($(this).parents('tr')).index());
+        });
+    });
+
+    function addAndRemoveClassByIdElem(elementIdentifier, classToAdd, classToRemove) {
+        $(elementIdentifier).addClass(classToAdd).removeClass(classToRemove);
+    }
+
+    function ShowHide(tr) {
+        var row = $table.row(tr);
+
+        if (row.child.isShown()) {
+            //Child is opened, so close it
+            row.child.hide();
+            tr.removeClass("shown");
+        } else {
+            //Child is closed, so open it
+            row.child(ExtractInfo()).show();
+            tr.addClass("shown");
+        }
+    }
+
+    function ExtractInfo(Data) {
+        return "" +
+            "<table class='table table-responsive ChildTable' style='background-color: transparent'>" +
+            "<thead>" +
+            "<tr>" +
+            "<th>Parcel</th>" +
+            "<th>Plants</th>" +
+            "</tr>" +
+            "</thead>" +
+            "<tbody>" +
+            "</tbody>" +
+            "</table>";
+    }
+
+    function validate() {
+        var flag = true;
+
+        if (!$("#NameInput").val().trim()) {
+            addAndRemoveClassByIdElem($("#NameInput").closest("div[class*='form-group']"), "has-error", "has-success");
+            flag = false;
+        } else {
+            addAndRemoveClassByIdElem($("#NameInput").closest("div[class*='form-group']"), "has-success", "has-error");
+        }
+        if ($SummerNoteInput.code().trim() === "") {
+            addAndRemoveClassByIdElem($SummerNoteInput.closest("div[class*='form-group']"), "has-error", "has-success");
+            flag = false;
+        } else {
+            addAndRemoveClassByIdElem($SummerNoteInput.closest("div[class*='form-group']"), "has-success", "has-error");
+        }
+
+        return flag;
+
+    }
+
+    function ModifyModal(edit, index) {
+        if (edit) {
+            RemoveAddButton(edit);
+
+            var data = $table.row(index).data();
+
+            $("#NameInput").val(data.Name);
+            $("#DescriptionInput").code(data.Description);
+            $("#IdContainer").val(index);
+
+            $("#myModalLabel").text("Edit entry");
+        } else {
+            RemoveAddButton(edit);
+
+            // Removes the values
+            $("#Formulario input").val("");
+
+
+            $("#myModalLabel").text("Create a new farm");
+        }
+
+        // Removes the error
+        $("#Formulario div").removeClass("has-error has-success");
+    }
+
+    function RemoveAddButton(remove) {
+        if (remove) {
+            $("#EditBtn").css("display", "block");
+            $("#CreateBtn").css("display", "none");
+        } else {
+            $("#EditBtn").css("display", "none");
+            $("#CreateBtn").css("display", "block");
+        }
+    }
+
+    function AddFarm() {
+        if (validate()) {
+
+            $.ajax({
+                url: 'http://localhost:56892/Farm/AddFarm',
+                type: 'POST',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({
+                    "Name": $("#NameInput").val(),
+                    "Description": $SummerNoteInput.code()
+                }),
+                success: function (data) {
+                    if (data) {
+                        var Farm = { "Id": data.Id, "Name": data.Name, "Description": data.Description };
+
+                        $table.row.add(Farm).draw();
+
+                        $('#CreateModal').modal('toggle');
+                        $('body').removeClass('modal-open');
+                    } else {
+                        if ($("#ServerError").length == 0) {
+                            $("<div id='ServerError' style='margin-bottom:15px'><p class='label label-danger'>The server encountered an error</p></div>").insertAfter($("#Title"));
+                        }
+                    }
+                },
+                error: function () {
+                    console.error("ERROR");
+                }
+            });
+        }
+    }
+
+    function ModifyDeleteModal(index) {
+        $("#IdDeleter").val(index);
+    }
+
+    function RemoveFarm() {
+        if ($("#IdDeleter").val().trim() != null) {
+
+            var index = parseInt($("#IdDeleter").val());
+
+            $.ajax({
+                url: 'http://localhost:56892/Farm/RemoveFarm',
+                type: 'DELETE',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({ "farmId": $table.row(index).data().Id }),
+                success: function (data) {
+                    $table.row(index).remove().draw();
+
+                    $('#DeleteModal').modal('toggle');
+                    $('body').removeClass('modal-open');
+                },
+                error: function (data) {
+                    console.error("ERROR");
+                }
+            });
+        }
+    }
+</script>

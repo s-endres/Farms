@@ -13,5 +13,58 @@
 input,
 select,
 textarea {
-    max-width: 280px;
+    max-width: 100%;
 }
+
+.glyphicon {
+    color: black;
+    transition: color 3.0s;
+}
+
+.glyphicon-edit:hover {
+    color: #3072ab;
+    transition: color 0.3s;
+}
+
+.glyphicon-eye-open:hover {
+    color: #FFB92C;
+    transition: color 0.3s;
+}
+
+.glyphicon-trash:hover {
+    color: #ed4444;
+    transition: color 0.3s;
+}
+
+.glyphicon-plus-sign:hover {
+    color: #00CC66;
+    transition: color 0.3s;
+}
+
+.Float-Right {
+    float: right;
+}
+
+.In-Line {
+    display: inline;
+}
+
+#table > tbody > tr {
+    background-color: white;
+    transition: 1s;
+}
+
+    #table > tbody > tr:hover {
+        background-color: #eaf5ff;
+        transition: 0.5s;
+    }
+
+table .ChildTable > tbody > tr {
+    background-color: transparent;
+    transition: 1s;
+}
+
+    table .ChildTable > tbody > tr:hover {
+        background-color: #BEDEFD;
+        transition: 0.5s;
+    }
