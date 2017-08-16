@@ -2,4 +2,360 @@
 @{
     ViewBag.Title = "Plants";
 }
-<h2>Plants</h2>
+
+<!-- DataTables CSS -->
+<link href="/bower_components/datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.css" rel="stylesheet">
+<!-- DataTables Responsive CSS -->
+<link href="/bower_components/datatables-responsive/css/dataTables.responsive.css" rel="stylesheet">
+<!-- Custom Fonts -->
+<link href="/bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+<!-- DataTables JavaScript -->
+<script src="/bower_components/datatables/media/js/jquery.dataTables.min.js"></script>
+<script src="/bower_components/datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.min.js"></script>
+<!-- WYSIWYG -->
+<script src="~/bower_components/summernote/js/summernote.min.js"></script>
+<link href="~/bower_components/summernote/css/summernote.css" rel="stylesheet" />
+<!-- CSS -->
+<link href="~/Content/Site.css" rel="stylesheet" />
+<!-- Basic methods -->
+<script src="~/Scripts/BasicsMethods.js"></script>
+
+<h2>Plants <span class="glyphicon glyphicon-plus-sign" onclick="ModifyModal(false, -1)" data-toggle="modal" data-target="#CreateModal"></span></h2>
+
+<table id="table" class="table table-responsive">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Planted Date</th>
+            <th>Plant Type</th>
+            <th>Options</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+<!-- Modals -->
+<!-- Add modal -->
+<div class="modal fade" id="CreateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Add a new entry</h4>
+            </div>
+            <div class="modal-body">
+                <form id="Formulario">
+                    <div class="form-group">
+                        <input id="IdContainer" class="form-control" style="display:none">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">Plant's name:</label>
+                        <input id="NameInput" type="text" class="form-control" placeholder="Enter the plant's name">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">Description:</label>
+                        <textarea id="DescriptionInput" class="form-control" placeholder="Describe the plant"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">Planted date:</label>
+                        <input id="PlantedDateInput" type="date" class="form-control" placeholder="(DD/MM/YYYY)">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">Plant type:</label>
+                        <select class="form-control" id="PlantTypeInput">
+                        </select>
+                    </div>
+                </form>
+                <button id="CreateBtn" class="btn btn-primary" onclick="AddPlant()">Create</button>
+                <button id="EditBtn" class="btn btn-primary" onclick="EditPlant()">Edit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete modal -->
+<div class="modal fade" id="DeleteModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myDeleteLabel">Do you really want to delete this entry?</h4>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <input id="IdDeleter" type="hidden" class="form-control" placeholder="First entry">
+                    </div>
+                </form>
+                <button id="DeleteBtn" class="btn btn-danger In-Line Float-Right" onclick="RemovePlant()">Delete</button>
+                <button id="CancelBtn" class="btn btn-default In-Line" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+
+        $.urlParam = function (name) {
+            var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+            if (results == null) {
+                return null;
+            }
+            else {
+                return results[1] || -1;
+            }
+        }
+
+        $ParcelId = $.urlParam("ParcelId");
+
+        // initializes the DataTable with content
+        if (isNaN($ParcelId) || $ParcelId == -1 || !$.isNumeric($ParcelId)) {
+            window.location.replace("http://localhost:56892/Farm/Index");
+        }
+
+        $.ajax({
+            url: 'http://localhost:56892/Plant/GetAllPlantsByParcelId',
+            type: 'GET',
+            data: { "ParcelId": $ParcelId },
+            contentType: 'application/json; charset=utf-8',
+            success: function (data) {
+                $table = $("#table").DataTable({
+                    responsive: true,
+                    data: data,
+                    "order": [[0, "asc"]],
+                    "columnDefs": [{
+                        "targets": [5],
+                        "orderable": false
+                    }],
+                    "columns": [
+                        { "data": "Id" },
+                        { "data": "Name" },
+                        { "data": "Description" },
+                        { "data": "PlantedDate" },
+                        { "data": "PlantType" },
+                        {
+                            "defaultContent":
+                            "<span class='glyphicon glyphicon-edit' data-toggle='modal' data-target='#CreateModal'></span> " +
+                            "<span class='glyphicon glyphicon-trash' data-toggle='modal' data-target='#DeleteModal'></span>"
+                        }
+                    ]
+                });
+            },
+            error: function () {
+                console.error("ERROR");
+            }
+        });
+        //Fills the select
+        $.ajax({
+            url: 'http://localhost:56892/Plant/GetAllPlantTypes',
+            type: 'GET',
+            contentType: 'application/json; charset=utf-8',
+            success: function (data) {
+                $.each(data, function (index, value) {
+                    $("#PlantTypeInput").append("<option value='" + value.Id + "'>" + value.Name + "</option>")
+                });
+            },
+            error: function () {
+                console.error("ERROR");
+            }
+        });
+        // initializes the summernote
+        $SummerNoteInput = $("#DescriptionInput").summernote({
+            height: 150                 // set editor height
+        }).code("");
+
+        // EVENTS
+        // Event to edit the plant
+        $("#table tbody").on('click', '.glyphicon-edit', function () {
+            ModifyModal(true, $table.row($(this).parents('tr')).index());
+        });
+        // Event to delete the plant
+        $("#table tbody").on('click', '.glyphicon-trash', function () {
+            ModifyDeleteModal($table.row($(this).parents('tr')).index());
+        });
+    });
+
+    function ModifyModal(edit, index) {
+        if (edit) {
+            RemoveAddButton(edit);
+
+            var data = $table.row(index).data();
+
+            $("#NameInput").val(data.Name);
+            $("#DescriptionInput").code(data.Description);
+            $("#PlantTypeInput").val(data.PlantType);
+            $("#PlantedDateInput").val(data.PlantedDate);
+
+            $("#IdContainer").val(index);
+
+            $("#myModalLabel").text("Edit entry");
+        } else {
+            RemoveAddButton(edit);
+
+            // Removes the values
+            $("#Formulario input").val("");
+            $("#PlantTypeInput").val(1);
+            $("#PlantedDateInput").val("");
+            $SummerNoteInput.code("");
+
+
+            $("#myModalLabel").text("Create a new plant");
+        }
+
+        // Removes the error
+        $("#Formulario div").removeClass("has-error has-success");
+    }
+
+    function RemoveAddButton(remove) {
+        if (remove) {
+            $("#EditBtn").css("display", "block");
+            $("#CreateBtn").css("display", "none");
+        } else {
+            $("#EditBtn").css("display", "none");
+            $("#CreateBtn").css("display", "block");
+        }
+    }
+
+    function RemovePlant() {
+        if ($("#IdDeleter").val().trim() != null) {
+
+            var index = parseInt($("#IdDeleter").val());
+
+            $.ajax({
+                url: 'http://localhost:56892/Plant/RemovePlant',
+                type: 'DELETE',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({ "plantId": $table.row(index).data().Id }),
+                success: function (data) {
+                    $table.row(index).remove().draw();
+
+                    $('#DeleteModal').modal('toggle');
+                    $('body').removeClass('modal-open');
+                },
+                error: function (data) {
+                    console.error("ERROR");
+                }
+            });
+        }
+    }
+
+    function Validate() {
+        var flag = true;
+        if (!$("#NameInput").val()) {
+            addAndRemoveClassByIdElem($("#NameInput").parent(), "has-error", "has-success");
+            flag = false;
+        } else {
+            addAndRemoveClassByIdElem($("#NameInput").parent(), "has-success", "has-error");
+        }
+
+        if ($SummerNoteInput.code() === "") {
+            addAndRemoveClassByIdElem($("#DescriptionInput").parent(), "has-error", "has-success");
+            flag = false;
+        } else {
+            addAndRemoveClassByIdElem($("#DescriptionInput").parent(), "has-success", "has-error");
+        }
+        if (!isValidDate($("#PlantedDateInput").val())) {
+            addAndRemoveClassByIdElem($("#PlantedDateInput").parent(), "has-error", "has-success");
+            flag = false;
+        } else {
+            addAndRemoveClassByIdElem($("#PlantedDateInput").parent(), "has-success", "has-error");
+        }
+        if ($("#PlantTypeInput").val() > 4 || $("#PlantTypeInput").val() < 1) {
+            addAndRemoveClassByIdElem($("#PlantTypeInput").parent(), "has-error", "has-success");
+            flag = false;
+        } else {
+            addAndRemoveClassByIdElem($("#PlantTypeInput").parent(), "has-success", "has-error");
+        }
+
+        return flag;
+    }
+
+    function isValidDate(dateString) {
+        // First check for the pattern
+        if (!/^\d{4}-\d{1,2}-\d{1,2}$/.test(dateString))
+            return false;
+
+        // Parse the date parts to integers
+        var parts = dateString.split("-");
+        var day = parseInt(parts[2], 10);
+        var month = parseInt(parts[1], 10);
+        var year = parseInt(parts[0], 10);
+
+        // Check the ranges of month and year
+        if (year < 1000 || year > 3000 || month == 0 || month > 12)
+            return false;
+
+        var monthLength = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+        // Adjust for leap years
+        if (year % 400 == 0 || (year % 100 != 0 && year % 4 == 0))
+            monthLength[1] = 29;
+
+        // Check the range of the day
+        return day > 0 && day <= monthLength[month - 1];
+    };
+
+    function AddPlant() {
+        if (Validate()) {
+            $.ajax({
+                url: 'http://localhost:56892/Plant/AddPlant',
+                type: 'POST',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({
+                    "Name": $("#NameInput").val(),
+                    "Description": $SummerNoteInput.code(),
+                    "PlantedDate": $("#PlantedDateInput").val(),
+                    "IdParcel": $ParcelId,
+                    "PlantType": $("#PlantTypeInput").val()
+                }),
+                success: function (data) {
+                    var Plant = { "Id": data.Id, "Name": data.Name, "Description": data.Description, "PlantedDate": data.PlantedDate, "PlantType": data.PlantType };
+
+                    $table.row.add(Plant).draw();
+
+                    $('#CreateModal').modal('toggle');
+                    $('body').removeClass('modal-open');
+                },
+                error: function () {
+                    console.error("ERROR");
+                }
+            });
+        }
+    }
+
+    function EditPlant() {
+        if (Validate()) {
+            var idTable = $("#IdContainer").val();
+            var PlantData = $table.row(idTable).data();
+
+            var Plant = {
+                "Id": parseInt(PlantData.Id),
+                "Name": $("#NameInput").val(),
+                "Description": $SummerNoteInput.code(),
+                "PlantedDate": $("#PlantedDateInput").val(),
+                "IdParcel": $ParcelId,
+                "PlantType": $("#PlantTypeInput").val()
+            };
+
+
+
+            $.ajax({
+                url: 'http://localhost:56892/Plant/UpdatePlant',
+                type: 'PUT',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(Plant),
+                success: function (data) {
+                    $table.row(idTable).data(Plant).draw();
+
+                    $('#CreateModal').modal('toggle');
+                    $('body').removeClass('modal-open');
+                },
+                error: function () {
+                    console.error("ERROR");
+                }
+            });
+        }
+    }
+</script>

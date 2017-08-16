@@ -11,7 +11,7 @@ function ShowHide(tr, closeIt) {
         tr.removeClass("shown");
     } else {
         //Child is closed, so open it
-        row.child(ExtractInfo()).show();
+        row.child(ExtractInfo(row.data().Id)).show();
         tr.addClass("shown");
     }
 }

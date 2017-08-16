@@ -18,7 +18,7 @@
 <!-- CSS -->
 <link href="~/Content/Site.css" rel="stylesheet" />
 <!-- Basic methods -->
-<script src="~/Scripts/Basics methods.js"></script>
+<script src="~/Scripts/BasicsMethods.js"></script>
 
 <h2 id="Title">Farms <span class="glyphicon glyphicon-plus-sign" onclick="ModifyModal(false, -1)" data-toggle="modal" data-target="#CreateModal"></span></h2>
 
@@ -129,7 +129,7 @@
         // initializes the summernote
         $SummerNoteInput = $("#DescriptionInput").summernote({
             height: 300                 // set editor height
-        });
+        }).code("");
 
         // Event to show details table
         $("#table tbody").on('click', '.glyphicon-chevron-down, .glyphicon-chevron-up', function () {
@@ -157,12 +157,13 @@
         $("#table tbody").on('click', '.glyphicon-eye-open', function () {
 
             window.location.replace("http://localhost:56892/Parcel/Index?FarmId=" + $table.row($(this).parents('tr')).data().Id);
-            
+
         });
     });
 
-    function ExtractInfo(Data) {
-        return "" +
+    function ExtractInfo(Id) {
+        //console.log(Id);
+        var Parcels = "" +
             "<table class='table table-responsive ChildTable' style='background-color: transparent'>" +
             "<thead>" +
             "<tr>" +
@@ -170,9 +171,39 @@
             "<th>Plants</th>" +
             "</tr>" +
             "</thead>" +
-            "<tbody>" +
-            "</tbody>" +
-            "</table>";
+            "<tbody>";
+
+        $.ajax({
+            url: 'http://localhost:56892/Parcel/GetAllParcelByFarmId',
+            type: 'GET',
+            contentType: 'application/json; charset=utf-8',
+            data: { "farmId": Id },
+            async: false,
+            success: function (data) {
+                $.each(data, function (index, value) {
+                    Parcels += "<tr><td>" + value.Description + "</td>";
+                    $.ajax({
+                        url: 'http://localhost:56892/Plant/GetAllPlantsByParcelId',
+                        type: 'GET',
+                        contentType: 'application/json; charset=utf-8',
+                        data: { "parcelId": value.Id },
+                        async: false,
+                        success: function (data) {
+                            console.log(data);
+                            Parcels += "<td>" + data.length + "</td></tr>";
+                        },
+                        error: function () {
+                            console.error("ERROR");
+                        }
+                    });
+                });
+            },
+            error: function () {
+                console.error("ERROR");
+            }
+        });
+        Parcels += "</tbody></table>";
+        return Parcels;
     }
 
     function validate() {
@@ -291,13 +322,13 @@
 
             var idTable = $("#IdContainer").val();
             var FarmData = $table.row(idTable).data();
-            
+
             var Farm = {
                 "Id": parseInt(FarmData.Id),
                 "Name": $("#NameInput").val(),
                 "Description": $SummerNoteInput.code()
             };
-            
+
             $.ajax({
                 url: 'http://localhost:56892/Farm/UpdateFarm',
                 type: 'PUT',

@@ -1,5 +1,353 @@
-﻿
-@{
+﻿@{
     ViewBag.Title = "Edit";
 }
-<h2>Edit</h2>
+
+<!-- DataTables CSS -->
+<link href="/bower_components/datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.css" rel="stylesheet">
+<!-- DataTables Responsive CSS -->
+<link href="/bower_components/datatables-responsive/css/dataTables.responsive.css" rel="stylesheet">
+<!-- DataTables JavaScript -->
+<script src="/bower_components/datatables/media/js/jquery.dataTables.min.js"></script>
+<script src="/bower_components/datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.min.js"></script>
+<!-- Custom Fonts -->
+<link href="/bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+<!-- WYSIWYG -->
+<script src="~/bower_components/summernote/js/summernote.min.js"></script>
+<link href="~/bower_components/summernote/css/summernote.css" rel="stylesheet" />
+<!-- Select2 -->
+<script src="~/bower_components/select2/js/select2.min.js"></script>
+<link href="~/bower_components/select2/css/select2.min.css" rel="stylesheet" />
+
+<!-- Basic methods -->
+<script src="~/Scripts/BasicsMethods.js"></script>
+
+
+<h2>Edit </h2>
+<h4 id="Title">Parcel </h4>
+
+<form style="margin: 0px 30px 0px 30px">
+    <input id="FarmId" style="display:none" disabled>
+
+    <div class="form-group">
+        <label class="control-label">Parcel's Size:</label>
+        <input id="SizeInput" type="text" class="form-control" placeholder="Enter the parcel's size" style="width: 360px">
+    </div>
+    <div class="form-group" id="DescriptionSummmerNote">
+        <label class="control-label">Description:</label>
+        <textarea id="DescriptionParcelInput" class="form-control" placeholder="Describe the parcel"></textarea>
+    </div>
+    <div class="form-group" id="SelectForm">
+        <label class="control-label">Conditions:</label>
+        <select id="Picker" multiple style="width: 279px">
+            <option value="1">Rainy</option>
+            <option value="2">Dry</option>
+            <option value="3">Very dry</option>
+        </select>
+    </div>
+</form>
+<div class="alert alert-danger" id="TableError" style="display:none">
+    <strong>Danger!</strong> You must add at least one observation
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-heading">Observations | <span class="glyphicon glyphicon-plus-sign" onclick="ModifyModal(false, -1)" data-toggle="modal" data-target="#CreateModal"></span></div>
+    <div class="panel-body">
+        <table id="table" class="table table-responsive">
+            <thead>
+                <tr>
+                    <th>
+                        Description
+                    </th>
+                    <th>
+                        Options
+                    </th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<div>
+    <button class="btn btn-primary btn-lg" onclick="UpdateParcel()">Edit parcel</button>
+</div>
+
+
+<!-- Modals -->
+<!-- Add modal -->
+<div class="modal fade" id="CreateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Add a new entry</h4>
+            </div>
+            <div class="modal-body">
+                <form id="Formulario">
+                    <div class="form-group">
+                        <input id="IdContainer" type="hidden" class="form-control" placeholder="First entry">
+                    </div>
+                    <div id="ModalDescription" class="form-group">
+                        <label class="control-label">Description:</label>
+                        <textarea id="DescriptionInput" class="form-control" placeholder="Describe the observation"></textarea>
+                    </div>
+                </form>
+                <button id="CreateBtn" class="btn btn-primary" onclick="AddObservation()">Create</button>
+                <button id="EditBtn" class="btn btn-primary" onclick="EditObservation()">Edit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete modal -->
+<div class="modal fade" id="DeleteModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myDeleteLabel">Do you really want to delete this entry?</h4>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <input id="IdDeleter" type="hidden" class="form-control" placeholder="First entry">
+                    </div>
+                </form>
+                <button id="DeleteBtn" class="btn btn-danger In-Line Float-Right" onclick="RemoveObservation()">Delete</button>
+                <button id="CancelBtn" class="btn btn-default In-Line" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<script>
+    $(document).ready(function () {
+        $.urlParam = function (name) {
+            var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+            if (results == null) {
+                return null;
+            }
+            else {
+                return results[1] || -1;
+            }
+        }
+        $ParcelId = $.urlParam("ParcelId");
+
+        // Event to edit the farm
+        $("#table tbody").on('click', '.glyphicon-edit', function () {
+            ModifyModal(true, $table.row($(this).parents('tr')).index());
+        });
+        // Event to delete the farm
+        $("#table tbody").on('click', '.glyphicon-trash', function () {
+            ModifyDeleteModal($table.row($(this).parents('tr')).index());
+        });
+
+        // initializes the DataTable with content
+        if (isNaN($ParcelId) || $ParcelId == -1 || !$.isNumeric($ParcelId)) {
+            window.location.replace("http://localhost:56892/Farm/Index");
+        } else {
+            $.ajax({
+                url: 'http://localhost:56892/Parcel/GetParcel',
+                type: 'GET',
+                contentType: 'application/json; charset=utf-8',
+                data: { "ParcelId": $ParcelId },
+                success: function (data) {
+                    if (data) {
+                        $("#Title").text("Parcel - " + data.Id);
+                        $("#FarmId").val(data.IdFarm);
+
+                        //Fills the size
+                        $("#SizeInput").val(data.Size);
+
+                        // initializes the summernotes
+                        $SummerNoteInput = $("#DescriptionParcelInput").summernote({
+                            height: 150                 // set editor height
+                        }).code(data.Description);
+
+                        // Initializes the select2
+                        $Select = $("#Picker").select2({
+                            placeholder: "Select the conditions"
+                        }).val(data.ConditionIds).trigger("change");
+
+                        // Initializes the DataTable
+                        $table = $("#table").DataTable({
+                            responsive: true,
+                            data: data.Observations,
+                            "order": [[0, "asc"]],
+                            "columnDefs": [{
+                                "targets": [1],
+                                "orderable": false
+                            }],
+                            "columns": [
+                                { "data": "Description" },
+                                {
+                                    "defaultContent": "<span class='glyphicon glyphicon-edit' data-toggle='modal' data-target='#CreateModal'></span> " +
+                                    "<span class='glyphicon glyphicon-trash' data-toggle='modal' data-target='#DeleteModal'></span>"
+                                }
+                            ]
+                        });
+
+                    } else {
+                        if ($("#ServerError").length == 0) {
+                            $("<div id='ServerError' style='margin-bottom:15px'><p class='label label-danger'>The server encountered an error</p></div>").insertAfter($("#Title"));
+                        }
+                    }
+                },
+                error: function () {
+                    window.location.replace("http://localhost:56892/Farm/Index");
+                }
+            });
+        }
+
+        
+
+        $SummerNoteObservationInput = $("#DescriptionInput").summernote({
+            height: 250                 // set editor height
+        });
+    });
+
+    function ModifyModal(edit, index) {
+        if (edit) {
+            RemoveAddButton(edit);
+
+            var data = $table.row(index).data();
+
+            $("#DescriptionInput").code(data.Description);
+            $("#IdContainer").val(index);
+
+            $("#myModalLabel").text("Edit observation");
+        } else {
+            RemoveAddButton(edit);
+
+            // Removes the values
+            $SummerNoteObservationInput.code("");
+
+
+            $("#myModalLabel").text("Create a new observation");
+        }
+
+        // Removes the error
+        $("#Formulario div").removeClass("has-error has-success");
+    }
+
+    function RemoveAddButton(remove) {
+        if (remove) {
+            $("#EditBtn").css("display", "block");
+            $("#CreateBtn").css("display", "none");
+        } else {
+            $("#EditBtn").css("display", "none");
+            $("#CreateBtn").css("display", "block");
+        }
+    }
+
+    function AddObservation() {
+        if ($SummerNoteObservationInput.code() !== "") {
+            $table.row.add({ "Description": $SummerNoteObservationInput.code() }).draw();
+
+            $('#CreateModal').modal('toggle');
+            $('body').removeClass('modal-open');
+        } else {
+            $("#ModalDescription").addClass("has-error");
+        }
+    }
+
+    function EditObservation() {
+        if ($SummerNoteObservationInput.code() !== "") {
+
+            $table.row($("#IdContainer").val()).data({
+                "Description": $SummerNoteObservationInput.code()
+            }).draw();
+
+            $('#CreateModal').modal('toggle');
+            $('body').removeClass('modal-open');
+        }
+    }
+
+    function RemoveObservation() {
+        if ($("#IdDeleter").val().trim() != null) {
+            $table.row(parseInt($("#IdDeleter").val())).remove().draw();
+
+            $('#DeleteModal').modal('toggle');
+            $('body').removeClass('modal-open');
+        }
+    }
+
+    function UpdateParcel() {
+        if (Validate()) {
+            var Observations = [];
+            $.each($table.rows().data(), function (index, value) {
+                value.Id = index;
+                Observations.push(value);
+            });
+
+            $.ajax({
+                url: 'http://localhost:56892/Parcel/UpdateParcel ',
+                type: 'PUT',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify({
+                    "Id": $ParcelId,
+                    "Size": parseFloat($("#SizeInput").val()),
+                    "Description": $SummerNoteInput.code(),
+                    "IdFarm": parseInt($("#FarmId").val()),
+                    "Observations": Observations,
+                    "ConditionIds": $Select.val()
+                }),
+                success: function (data) {
+                    if (data) {
+                        console.log($("#FarmId").val());
+                        window.location.replace("http://localhost:56892/Parcel/Index?FarmId=" + parseInt($("#FarmId").val()));
+                    } else {
+                        if ($("#ServerError").length == 0) {
+                            $("<div id='ServerError' style='margin-bottom:15px'><p class='label label-danger'>The server encountered an error</p></div>").insertAfter($("#Title"));
+                        }
+                    }
+                },
+                error: function () {
+                    console.error("ERROR");
+                }
+            });
+        }
+    }
+
+    function Validate() {
+        var flag = true;
+
+        // Validates the size
+        if (!$("#SizeInput").val() || !$.isNumeric($("#SizeInput").val())) {
+            addAndRemoveClassByIdElem($("#SizeInput").parent(), "has-error", "has-success");
+            flag = false;
+        } else {
+            addAndRemoveClassByIdElem($("#SizeInput").parent(), "has-success", "has-error");
+        }
+
+        // Validates the description
+        if ($SummerNoteInput.code() === "") {
+            addAndRemoveClassByIdElem($("#DescriptionSummmerNote"), "has-error", "has-success");
+            flag = false;
+        } else {
+            addAndRemoveClassByIdElem($("#DescriptionSummmerNote"), "has-success", "has-error");
+        }
+
+        // Validates the selector
+        if (!$Select.val()) {
+            addAndRemoveClassByIdElem($("#SelectForm"), "has-error", "has-success");
+            flag = false;
+        } else {
+            addAndRemoveClassByIdElem($("#SelectForm"), "has-success", "has-error");
+        }
+
+        // Validates if the table has entries
+        if ($table.rows().data().length === 0) {
+            $("#TableError").css("display", "block");
+            flag = false;
+        } else {
+            $("#TableError").css("display", "none");
+        }
+
+        return flag;
+    }
+
+</script>

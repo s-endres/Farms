@@ -15,7 +15,7 @@
 <!-- CSS -->
 <link href="~/Content/Site.css" rel="stylesheet" />
 <!-- Basic methods -->
-<script src="~/Scripts/Basics methods.js"></script>
+<script src="~/Scripts/BasicsMethods.js"></script>
 
 <h2 id="Title"></h2>
 
@@ -148,8 +148,9 @@
         });
     });
 
-    function ExtractInfo(Data) {
-        return "" +
+    function ExtractInfo(Id) {
+        //console.log(Id);
+        var Parcels = "" +
             "<table class='table table-responsive ChildTable' style='background-color: transparent'>" +
             "<thead>" +
             "<tr>" +
@@ -157,9 +158,26 @@
             "<th>Count</th>" +
             "</tr>" +
             "</thead>" +
-            "<tbody>" +
-            "</tbody>" +
-            "</table>";
+            "<tbody>";
+
+        $.ajax({
+            url: 'http://localhost:56892/Plant/GetParcelByTypeAndCount',
+            type: 'GET',
+            contentType: 'application/json; charset=utf-8',
+            data: { "parcelId": Id },
+            async: false,
+            success: function (data) {
+                $.each(data, function (index, value) {
+                    Parcels += "<tr><td>" + value.type + "</td>";
+                    Parcels += "<td>" + value.count + "</td></tr>";
+                });
+            },
+            error: function () {
+                console.error("ERROR");
+            }
+        });
+        Parcels += "</tbody></table>";
+        return Parcels;
     }
 
     function RemoveParcel() {
