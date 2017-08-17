@@ -180,29 +180,33 @@
             data: { "farmId": Id },
             async: false,
             success: function (data) {
-                $.each(data, function (index, value) {
-                    Parcels += "<tr><td>" + value.Description + "</td>";
-                    $.ajax({
-                        url: 'http://localhost:56892/Plant/GetAllPlantsByParcelId',
-                        type: 'GET',
-                        contentType: 'application/json; charset=utf-8',
-                        data: { "parcelId": value.Id },
-                        async: false,
-                        success: function (data) {
-                            console.log(data);
-                            Parcels += "<td>" + data.length + "</td></tr>";
-                        },
-                        error: function () {
-                            console.error("ERROR");
-                        }
+                if (data.length > 0) {
+                    $.each(data, function (index, value) {
+                        Parcels += "<tr><td>" + value.Description + "</td>";
+                        $.ajax({
+                            url: 'http://localhost:56892/Plant/GetAllPlantsByParcelId',
+                            type: 'GET',
+                            contentType: 'application/json; charset=utf-8',
+                            data: { "parcelId": value.Id },
+                            async: false,
+                            success: function (data) {
+                                console.log(data);
+                                Parcels += "<td>" + data.length + "</td></tr>";
+                            },
+                            error: function () {
+                                console.error("ERROR");
+                            }
+                        });
                     });
-                });
+                    Parcels += "</tbody></table>";
+                } else {
+                    Parcels = "<p>There are not parcels registered</p>"
+                }
             },
             error: function () {
                 console.error("ERROR");
             }
         });
-        Parcels += "</tbody></table>";
         return Parcels;
     }
 

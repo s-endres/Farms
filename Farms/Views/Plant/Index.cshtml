@@ -29,7 +29,7 @@
             <th>Name</th>
             <th>Description</th>
             <th>Planted Date</th>
-            <th>Plant Type</th>
+            <th>Plant Name</th>
             <th>Options</th>
         </tr>
     </thead>
@@ -120,10 +120,29 @@
             type: 'GET',
             data: { "ParcelId": $ParcelId },
             contentType: 'application/json; charset=utf-8',
-            success: function (data) {
+            success: function (FirstData) {
+                // Changes the values of plant type
+                $.each(FirstData, function (index, value) {
+                    $.ajax({
+                        url: 'http://localhost:56892/Plant/GetTypePlantById',
+                        type: 'GET',
+                        data: { "plantTypeId": value.PlantType },
+                        async: false,
+                        contentType: 'application/json; charset=utf-8',
+                        success: function (data) {
+                            value.PlantName = data.Name;
+                            
+                        },
+                        error: function () {
+                            console.error("ERROR");
+                        }
+                    });
+                });
+                
+
                 $table = $("#table").DataTable({
                     responsive: true,
-                    data: data,
+                    data: FirstData,
                     "order": [[0, "asc"]],
                     "columnDefs": [{
                         "targets": [5],
@@ -134,7 +153,7 @@
                         { "data": "Name" },
                         { "data": "Description" },
                         { "data": "PlantedDate" },
-                        { "data": "PlantType" },
+                        { "data": "PlantName" },
                         {
                             "defaultContent":
                             "<span class='glyphicon glyphicon-edit' data-toggle='modal' data-target='#CreateModal'></span> " +
@@ -142,6 +161,8 @@
                         }
                     ]
                 });
+
+                console.log(FirstData);
             },
             error: function () {
                 console.error("ERROR");
@@ -311,7 +332,14 @@
                     "PlantType": $("#PlantTypeInput").val()
                 }),
                 success: function (data) {
-                    var Plant = { "Id": data.Id, "Name": data.Name, "Description": data.Description, "PlantedDate": data.PlantedDate, "PlantType": data.PlantType };
+                    var PlantName = $("#PlantTypeInput [value='" + data.PlantType + "']").text();
+                    var Plant = {
+                        "Id": data.Id, "Name": data.Name,
+                        "Description": data.Description,
+                        "PlantedDate": data.PlantedDate,
+                        "PlantType": data.PlantType,
+                        "PlantName": PlantName
+                    };
 
                     $table.row.add(Plant).draw();
 
@@ -347,6 +375,8 @@
                 contentType: 'application/json; charset=utf-8',
                 data: JSON.stringify(Plant),
                 success: function (data) {
+                    var PlantName = $("#PlantTypeInput [value='" + Plant.PlantType + "']").text();
+                    Plant.PlantName = PlantName;
                     $table.row(idTable).data(Plant).draw();
 
                     $('#CreateModal').modal('toggle');

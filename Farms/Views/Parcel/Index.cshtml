@@ -146,6 +146,7 @@
         $("#Title").on('click', '.glyphicon-plus-sign', function () {
             window.location.replace("http://localhost:56892/Parcel/Create?FarmId=" + $FarmId);
         });
+        
     });
 
     function ExtractInfo(Id) {
@@ -167,16 +168,20 @@
             data: { "parcelId": Id },
             async: false,
             success: function (data) {
-                $.each(data, function (index, value) {
-                    Parcels += "<tr><td>" + value.type + "</td>";
-                    Parcels += "<td>" + value.count + "</td></tr>";
-                });
+                if (data.length > 0) {
+                    $.each(data, function (index, value) {
+                        Parcels += "<tr><td>" + value.type + "</td>";
+                        Parcels += "<td>" + value.count + "</td></tr>";
+                    });
+                    Parcels += "</tbody></table>";
+                } else {
+                    Parcels = "<p>There are not plants registered</p>"
+                }
             },
             error: function () {
                 console.error("ERROR");
             }
         });
-        Parcels += "</tbody></table>";
         return Parcels;
     }
 
